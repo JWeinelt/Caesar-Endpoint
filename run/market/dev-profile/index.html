@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entwicklerprofil - Caesar Plugin Marketplace</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../style.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+    <!-- Header -->
+    <header class="bg-blue-900 shadow-md py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-white">Caesar Plugin Marketplace</a>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="/" class="hover:text-blue-400">Home</a></li>
+                    <li><a href="/about" class="hover:text-blue-400">Über</a></li>
+                    <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
+                    <li><a href="/login" class="hover:text-blue-400">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto py-12">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <div class="flex items-center mb-6">
+                <img id="avatar" src="developer-avatar.jpg" alt="Entwickler Avatar" class="w-20 h-20 rounded-full mr-6">
+                <div>
+                    <h2 id="pname" class="text-3xl font-semibold text-blue-500">Max Mustermann</h2>
+                    <p id="ptitle" class="text-lg text-gray-400">Developer & Plugin Creator</p>
+                    <p id="pplfo" class="text-sm text-gray-500">12 Plugins • 3 Followers</p>
+                    <div class="flex items-center space-x-4 mt-2">
+                        <span id="memsince" class="text-sm text-gray-300">Member since January 2022</span>
+                        <span id="last-activity" class="text-sm text-gray-300">Last activity: 2 days ago</span>
+                    </div>
+                    <div class="mt-4 flex items-center space-x-2">
+                        <!-- Verifizierungsstatus -->
+                        <span id="verificationStatus" class="text-sm font-semibold text-blue-500">Not verified</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-2xl font-semibold text-blue-500 mb-4">About this developer</h3>
+                <p id="pdesc1" class="text-lg text-gray-300 mb-4"></p>
+                <p id="pdesc2" class="text-lg text-gray-300 mb-6"></p>
+
+                <h4 class="text-xl font-semibold text-blue-500 mb-2">Public Resources</h4>
+                <ul id="pl-hist" class="list-disc pl-5">
+                    
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-900 py-4 mt-12">
+        <div class="container mx-auto text-center text-sm text-gray-400">
+            <p>Copyright &copy; 2025 Julian Weinelt. All rights reserved.</p>
+            <p>Imprint | Privacy | ToS</p>
+        </div>
+    </footer>
+
+    
+    <script src="developer-profile.js"></script>
+</body>
+</html>

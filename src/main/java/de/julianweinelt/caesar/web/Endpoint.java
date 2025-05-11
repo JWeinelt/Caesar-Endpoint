@@ -29,8 +29,18 @@ public class Endpoint {
     public void start() {
         new File("./lang/server").mkdirs();
         new File("./lang/client").mkdirs();
+
+        new File("./downloads/worker").mkdirs();
+        new File("./downloads/client").mkdirs();
+        new File("./downloads/server").mkdirs();
+        new File("./downloads/misc").mkdirs();
         Javalin app = Javalin.create(javalinConfig -> {
                     javalinConfig.showJavalinBanner = false;
+                    javalinConfig.staticFiles.add(staticFileConfig -> {
+                        staticFileConfig.directory = "./downloads";
+                        staticFileConfig.hostedPath = "/download";
+                        staticFileConfig.location = Location.EXTERNAL;
+                    });
                 })
                 .get("/public/language/server/{language}", ctx -> {
                     ctx.contentType("application/json");
@@ -67,6 +77,11 @@ public class Endpoint {
                     ctx.result(loadLanguageFile(language, false));
                 })
 
+                .get("/api/market/plugin", ctx -> {
+                    ctx.contentType("application/json");
+
+
+                })
                 .start(49850);
 
 
@@ -76,29 +91,31 @@ public class Endpoint {
             paths.filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(".html"))
                     .forEach(path -> {
-                        String filename = path.getFileName().toString();
-                        String route = "/" + filename.replace(".html", "");
+                        String route;
+                        String fileName = path.getFileName().toString();
+
+                        if (fileName.equals("index.html")) {
+                            // Erzeuge Route aus dem Verzeichnispfad
+                            Path relativePath = Paths.get(pageFolder.toURI()).relativize(path.getParent());
+                            route = "/" + relativePath.toString().replace("\\", "/"); // Windows-Slashes fixen
+                        } else {
+                            // Erzeuge Route aus Dateiname ohne .html
+                            Path relativePath = Paths.get(pageFolder.toURI()).relativize(path);
+                            route = "/" + relativePath.toString().replace(".html", "").replace("\\", "/");
+                        }
+
+                        // Leerstring behandeln ("/" als Route)
+                        if (route.equals("/")) route = "";
 
                         app.get(route, ctx -> {
-                            ctx.result(Files.readString(path));  // Lese die HTML-Datei und gebe sie als Response zurück
+                            ctx.result(Files.readString(path));
                             ctx.contentType("text/html");
                         });
                     });
         } catch (IOException e) {
             log.error(e.getMessage());
         }
-        app.get("/{page}.html", ctx -> {
-            ctx.redirect("/" + ctx.pathParam("page"));
-        });
-        app.get("/", ctx -> {
-            Path indexPath = Paths.get("./market/index.html");
-            if (Files.exists(indexPath)) {
-                ctx.result(Files.readString(indexPath));
-                ctx.contentType("text/html");
-            } else {
-                ctx.status(404).result("index.html not found");
-            }
-        });
+
     }
 
     private String loadLanguageFile(String language, boolean server) throws IOException {

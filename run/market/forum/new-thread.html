@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuen Thread Erstellen</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+
+    
+    <!-- Header -->
+    <header class="bg-blue-900 shadow-md py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-white">Caesar Plugin Marketplace</a>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="/" class="hover:text-blue-400">Home</a></li>
+                    <li><a href="/about" class="hover:text-blue-400">About</a></li>
+                    <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
+                    <li><a href="/login" class="hover:text-blue-400">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Container für den Form -->
+    <div class="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg mt-8">
+        <form action="/create-thread" method="POST">
+            <div class="mb-4">
+                <label for="title" class="block text-lg font-semibold mb-2">Title of your post</label>
+                <input type="text" id="title" name="title" class="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div class="mb-4">
+                <label for="category" class="block text-lg font-semibold mb-2">Category</label>
+                <select id="category" name="category" class="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="discussion">Discussion</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="help">Help</option>
+                    <option value="off-topic">Development</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="content" class="block text-lg font-semibold mb-2">Post content</label>
+                <textarea id="content" name="content" rows="8" class="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+            </div>
+
+            <div class="flex items-center justify-between mt-6">
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Post it!
+                </button>
+                <a href="/forum" class="text-blue-400 hover:text-blue-300">Back to main forum</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 p-6 mt-8 text-center">
+        <p class="text-sm text-gray-400">© 2025 DeinForum. Alle Rechte vorbehalten.</p>
+    </footer>
+
+</body>
+</html>
