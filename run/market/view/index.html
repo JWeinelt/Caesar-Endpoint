@@ -6,6 +6,7 @@
     <title>Plugin Name - Caesar Plugin Marketplace</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="../style.css" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     
     <script>
         function openReportPopup() {
@@ -76,23 +77,23 @@
         <aside class="w-full md:w-1/4 bg-gray-800 p-4 rounded-lg shadow-md">
             <img src="plugin-image.jpg" alt="Plugin Image" class="w-full h-auto rounded-lg shadow-lg mb-4">
             <h3 class="text-xl font-semibold text-blue-400 mb-4">Information</h3>
-            <p class="text-sm text-gray-400"><strong>👨 Author:</strong> John Doe</p>
-            <p class="text-sm text-gray-400"><strong>🔽 Downloads:</strong> 1,234</p>
-            <p class="text-sm text-gray-400"><strong>🔁 Last Updated:</strong> March 2025</p>
-            <p class="text-sm text-gray-400"><strong>📝 License:</strong> MIT</p><br>
-            <p class="text-sm text-gray-400"><strong>📃 Source code: </strong><a href="https://github.com/example" class="text-blue-400">github.com/example</a></p>
-            <p class="text-sm text-gray-400"><strong>💸 Sponsor Link: </strong><a href="https://patreon.com/sponsor" class="text-blue-400">patreon.com/sponsor</a></p>
-            <p class="text-sm text-gray-400"><strong>❗ Wiki: </strong><a href="https://wiki.someplugin.com" class="text-blue-400">wiki.someplugin.com</a></p><br><br>
+            <p id="plugin-author" class="text-sm text-gray-400"><strong>👨 Author:</strong> John Doe</p>
+            <p id="plugin-downloads" class="text-sm text-gray-400"><strong>🔽 Downloads:</strong> 1,234</p>
+            <p id="plugin-last-update" class="text-sm text-gray-400"><strong>🔁 Last Updated:</strong> March 2025</p>
+            <p id="plugin-license" class="text-sm text-gray-400"><strong>📝 License:</strong> MIT</p><br>
+            <p id="plugin-sources" class="text-sm text-gray-400"><strong>📃 Source code: </strong><a href="https://github.com/example" class="text-blue-400">github.com/example</a></p>
+            <p id="plugin-sponsor" class="text-sm text-gray-400"><strong>💸 Sponsor Link: </strong><a href="https://patreon.com/sponsor" class="text-blue-400">patreon.com/sponsor</a></p>
+            <p id="plugin-wiki" class="text-sm text-gray-400"><strong>❗ Wiki: </strong><a href="https://wiki.someplugin.com" class="text-blue-400">wiki.someplugin.com</a></p><br><br>
             <p class="text-sm text-gray-400">🔨 <a class="underline text-blue-400 cursor-pointer" onclick="openReportPopup()">Report this</a></p>
         </aside>
 
         <!-- Plugin Information Section -->
         <div class="w-full md:w-3/4">
-            <h1 class="text-4xl font-bold text-blue-500 mb-4">Plugin Name</h1>
-            <p class="text-lg text-gray-400 mb-4">This is an example plugin which won't add anything to Caesar.</p>
+            <h1 id="plugin-name" class="text-4xl font-bold text-blue-500 mb-4">Plugin Name</h1>
+            <p id="short-desc" class="text-lg text-gray-400 mb-4">This is an example plugin which won't add anything to Caesar.</p>
             <div class="flex items-center space-x-4 mb-6">
-                <span class="text-sm text-gray-400">Version: 1.2.3</span>
-                <span class="text-sm text-gray-400">Compatible with: Caesar 1.0+</span>
+                <span id="plugin-version" class="text-sm text-gray-400">Version: 1.2.3</span>
+                <span id="caesar-version" class="text-sm text-gray-400">Compatible with: Caesar 1.0+</span>
             </div>
             
             <!-- Installation Button -->
@@ -111,7 +112,7 @@
             <!-- Plugin Details -->
             <section>
                 <h2 class="text-2xl font-semibold text-blue-500 mb-4">Details</h2>
-                <p class="text-sm text-gray-400 mb-4">Längere Beschreibung des Plugins, wie es funktioniert, welche Funktionen es enthält und wie es eingesetzt werden kann.</p>
+                <p id="long-desc" class="text-sm text-gray-400 mb-4">Längere Beschreibung des Plugins, wie es funktioniert, welche Funktionen es enthält und wie es eingesetzt werden kann.</p>
 
                 <h3 class="text-xl font-semibold text-blue-400 mb-2">Screenshots</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -129,6 +130,11 @@
                         <a id="star5" class="cursor-pointer" onclick="rate5stars">☆</a>
                     </span>
                     <span class="text-sm text-gray-400">(4.4/5.0) - 53 Ratings</span>
+                    <form action="?" method="POST">
+                      <div class="g-recaptcha" data-sitekey="your_site_key"></div>
+                      <br/>
+                      <input type="submit" value="Submit">
+                    </form>
                 </div>
                 <p class="text-blue-300">Want to give feedback? Go to <span class="text-blue-400 underline cursor-pointer">discussions</span>.</p>
                 <p class="text-sm text-gray-400">Your feedback and ratings help to improve the experience of every user on CPM.</p>

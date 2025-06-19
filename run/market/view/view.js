@@ -67,3 +67,30 @@ function closeErrorPopup() {
     popup.classList.add("opacity-0");
     setTimeout(() => popup.classList.add("hidden"), 500);
 }
+
+let params = new URLSearchParams(document.location.search);
+let pluginName = params.get("name"); // is the string "Jonathan"
+
+document.getElementById('plugin-name').textContent = pluginName;
+
+
+// ############### DATA GETTER ####################
+async function fetchPluginData() {
+    try {
+        const response = await fetch('https://market.caesarnet.cloud/api/market/plugin?name=' + pluginName);
+
+        if (!response.ok) {
+            throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        console.log("Plugin-Daten:", data);
+        document.getElementById('')
+
+    } catch (error) {
+        console.error("Fehler beim Abrufen der Plugin-Daten:", error);
+    }
+}
+
+fetchPluginData();
