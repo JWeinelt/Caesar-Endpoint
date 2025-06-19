@@ -2,6 +2,8 @@ package de.julianweinelt.caesar.web;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import de.julianweinelt.caesar.storage.MySQL;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -42,6 +45,13 @@ public class Endpoint {
                         staticFileConfig.location = Location.EXTERNAL;
                     });
                 })
+                .get("/versions", ctx -> {
+                    JsonObject json = new JsonObject();
+                    json.addProperty("client", "1.0.0");
+                    json.addProperty("server", "1.0.0");
+                    json.addProperty("connector", "1.0.0");
+                    ctx.result(json.toString()).status(200);
+                })
                 .get("/public/language/server/{language}", ctx -> {
                     ctx.contentType("application/json");
                     String language = ctx.pathParam("language");
@@ -51,7 +61,7 @@ public class Endpoint {
                         ctx.result(GSON.toJson(languages));
                         return;
                     }
-                    File file = new File("./lang/server" + language + ".json");
+                    File file = new File("./lang/server/" + language + ".json");
                     if (!file.exists()) {
                         ctx.status(404);
                         ctx.result("Language not found");
@@ -80,42 +90,23 @@ public class Endpoint {
                 .get("/api/market/plugin", ctx -> {
                     ctx.contentType("application/json");
 
-
+                    String name = ctx.queryParam("name") != null ? ctx.queryParam("name") : null;
+                    UUID uuid = MySQL.getInstance().getPluginID(name);
+                    if (uuid == null) {
+                        ctx.status(404);
+                        ctx.result("Plugin not found");
+                        return;
+                    }
+                    PluginEntry entry = MySQL.getInstance().getPlugin(uuid);
+                    if (entry == null) {
+                        ctx.status(404);
+                        ctx.result("Plugin not found");
+                        return;
+                    }
+                    ctx.result(GSON.toJson(entry));
+                    ctx.status(200);
                 })
-                .start(49850);
-
-
-        File pageFolder = new File("./market");
-
-        try (Stream<Path> paths = Files.walk(Paths.get(pageFolder.toURI()))) {
-            paths.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().endsWith(".html"))
-                    .forEach(path -> {
-                        String route;
-                        String fileName = path.getFileName().toString();
-
-                        if (fileName.equals("index.html")) {
-                            // Erzeuge Route aus dem Verzeichnispfad
-                            Path relativePath = Paths.get(pageFolder.toURI()).relativize(path.getParent());
-                            route = "/" + relativePath.toString().replace("\\", "/"); // Windows-Slashes fixen
-                        } else {
-                            // Erzeuge Route aus Dateiname ohne .html
-                            Path relativePath = Paths.get(pageFolder.toURI()).relativize(path);
-                            route = "/" + relativePath.toString().replace(".html", "").replace("\\", "/");
-                        }
-
-                        // Leerstring behandeln ("/" als Route)
-                        if (route.equals("/")) route = "";
-
-                        app.get(route, ctx -> {
-                            ctx.result(Files.readString(path));
-                            ctx.contentType("text/html");
-                        });
-                    });
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-
+                .start(48009);
     }
 
     private String loadLanguageFile(String language, boolean server) throws IOException {
