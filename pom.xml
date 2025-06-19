@@ -76,6 +76,12 @@
             <version>1.18.38</version>
             <scope>provided</scope>
         </dependency>
+        <!-- JDBC Connector for MySQL -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.3.0</version>
+        </dependency>
     </dependencies>
 
 </project>
