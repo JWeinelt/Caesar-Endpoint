@@ -1,6 +1,7 @@
 package de.julianweinelt.caesar.storage;
 
 import com.google.gson.Gson;
+import com.vdurmont.semver4j.Semver;
 import de.julianweinelt.caesar.CaesarEndpoint;
 import de.julianweinelt.caesar.web.PluginEntry;
 import lombok.Getter;
@@ -61,12 +62,33 @@ public class MySQL {
     }
 
     public void createTables() {
-        //try {
-            //conn.createStatement().execute("""
-            //""");
-        //} catch (SQLException e) {
-            //log.error("Failed to create tables: {}", e.getMessage());
-        //}
+        try {
+            conn.createStatement().execute("""
+            
+                CREATE TABLE plugin_entries (
+                uuid                CHAR(36) NOT NULL PRIMARY KEY,
+                name                VARCHAR(255) NOT NULL,
+                version             VARCHAR(50) NOT NULL,
+                author              VARCHAR(255) NOT NULL,
+                description         TEXT,
+                description_long    TEXT,
+                compatible_versions JSON,
+                downloads           INT UNSIGNED DEFAULT 0,
+                license             VARCHAR(100),
+                tags                JSON,
+                source_code         VARCHAR(2083),
+                sponsor_link        VARCHAR(2083),
+                wiki_link           VARCHAR(2083),
+                last_updated        TIMESTAMP NULL DEFAULT NULL,
+                date_created        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                rating              FLOAT DEFAULT 0,
+                screenshots         JSON
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            
+            """);
+        } catch (SQLException e) {
+            log.error("Failed to create tables: {}", e.getMessage());
+        }
     }
 
     public PluginEntry getPlugin(UUID uuid) {
@@ -93,7 +115,7 @@ public class MySQL {
                 entry.setLastUpdated(set.getTimestamp("last_updated"));
                 entry.setDateCreated(set.getTimestamp("date_created"));
                 entry.setRating(set.getFloat("rating"));
-                entry.setScreenshots(gson.fromJson(set.getString("screenshots"), String[].class));
+                entry.setScreenshots(gson.fromJson(set.getString("screenshots"), UUID[].class));
 
                 return entry;
             }
@@ -113,6 +135,41 @@ public class MySQL {
             }
         } catch (SQLException e) {
             log.error("Failed to get plugin uuid: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public void recordPluginFile(UUID plugin, Semver version, UUID fileID) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("INSERT IGNORE INTO plugin_versions (PluginID, VersionName, " +
+                    "VMajor, VMinor, VPatch, FileHash) VALUES (?, ?, ?, ?, ?, ?)");
+            pS.setString(1, plugin.toString());
+            pS.setString(2, version.getOriginalValue());
+            pS.setInt(3, version.getMajor());
+            pS.setInt(4, version.getMinor());
+            pS.setInt(5, version.getPatch());
+            pS.setString(6, fileID.toString());
+
+            pS.execute();
+        } catch (SQLException e) {
+            log.error("Failed to record plugin file: {}", e.getMessage());
+        }
+    }
+
+    public UUID getPluginFilePath(UUID plugin, Semver version) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT FileHash FROM plugin_versions WHERE PluginID = ?" +
+                    " AND VersionName = ?");
+            pS.setString(1, plugin.toString());
+            pS.setString(2, version.getOriginalValue());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) return UUID.fromString(set.getString("FileHash"));
+        } catch (SQLException e) {
+            log.error("Failed to get plugin file: {}", e.getMessage());
         }
         return null;
     }

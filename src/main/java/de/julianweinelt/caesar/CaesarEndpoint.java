@@ -1,5 +1,6 @@
 package de.julianweinelt.caesar;
 
+import de.julianweinelt.caesar.api.FileManager;
 import de.julianweinelt.caesar.discord.DiscordBot;
 import de.julianweinelt.caesar.storage.LocalStorage;
 import de.julianweinelt.caesar.storage.MySQL;
@@ -17,6 +18,9 @@ public class CaesarEndpoint {
     private DiscordBot discordBot;
 
     @Getter
+    private FileManager fileManager;
+
+    @Getter
     private MySQL mySQL;
 
     public static void main(String[] args) {
@@ -25,6 +29,7 @@ public class CaesarEndpoint {
     }
 
     public void start() {
+        fileManager = new  FileManager();
         localStorage = new LocalStorage();
         localStorage.loadData();
         endpoint = new Endpoint();

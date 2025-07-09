@@ -3,13 +3,15 @@ package de.julianweinelt.caesar.web;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import de.julianweinelt.caesar.api.FileManager;
 import de.julianweinelt.caesar.storage.MySQL;
 import io.javalin.Javalin;
+import io.javalin.http.UploadedFile;
 import io.javalin.http.staticfiles.Location;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,17 +35,8 @@ public class Endpoint {
         new File("./lang/server").mkdirs();
         new File("./lang/client").mkdirs();
 
-        new File("./downloads/worker").mkdirs();
-        new File("./downloads/client").mkdirs();
-        new File("./downloads/server").mkdirs();
-        new File("./downloads/misc").mkdirs();
         Javalin app = Javalin.create(javalinConfig -> {
                     javalinConfig.showJavalinBanner = false;
-                    javalinConfig.staticFiles.add(staticFileConfig -> {
-                        staticFileConfig.directory = "./downloads";
-                        staticFileConfig.hostedPath = "/download";
-                        staticFileConfig.location = Location.EXTERNAL;
-                    });
                 })
                 .get("/versions", ctx -> {
                     JsonObject json = new JsonObject();
@@ -105,6 +98,51 @@ public class Endpoint {
                     }
                     ctx.result(GSON.toJson(entry));
                     ctx.status(200);
+                })
+                .post("/api/market/plugin", ctx -> {
+                    JsonObject body = JsonParser.parseString(ctx.body()).getAsJsonObject();
+
+                })
+                .put("/api/market/plugin/upload/{id}/{version}", ctx -> {
+                    UUID pluginID = UUID.fromString(ctx.pathParam("id"));
+                    String version = ctx.pathParam("version");
+                    UploadedFile uploadedFile = ctx.uploadedFile("file");
+                    if (uploadedFile == null) {
+                        ctx.status(400).result(ErrorHandler.createError(ErrorHandler.CommonError.FILE_NOT_ATTACHED));
+                        return;
+                    }
+
+                    InputStream content = uploadedFile.content();
+
+                    File file = FileManager.getInstance().getFileToUploadPath(pluginID, version);
+                    try (FileOutputStream out = new FileOutputStream(file)) {
+                        content.transferTo(out);
+                    }
+
+                    ctx.result("File has been uploaded.");
+                })
+
+                .get("/download/plugin/{pluginId}/{version}", ctx -> {
+                    UUID pluginID = UUID.fromString(ctx.pathParam("pluginId"));
+                    String version = ctx.pathParam("version");
+                    File file = FileManager.getInstance().getFileToUploadPath(pluginID, version);
+                    FileInputStream fis = new FileInputStream(file);
+
+                    ctx.result(fis);
+                })
+
+                .patch("/api/minecraft/rate", ctx -> {
+                    JsonObject body = JsonParser.parseString(ctx.body()).getAsJsonObject();
+
+                })
+                .get("/api/minecraft/plugin", ctx -> {
+                    String market = ctx.queryParam("market");
+                    String pluginName = ctx.queryParam("pluginName");
+                    if (market == null || pluginName == null) {
+                        ctx.status(404).result(ErrorHandler.createError(ErrorHandler.CommonError.MC_PLUGIN_NOT_FOUND));
+                        return;
+                    }
+
                 })
                 .start(48009);
     }

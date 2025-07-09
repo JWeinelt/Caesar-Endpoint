@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -23,5 +24,31 @@ public class PluginEntry {
     private Date lastUpdated;
     private Date dateCreated;
     private float rating;
-    private String[] screenshots;
+    private UUID[] screenshots;
+
+    public PluginEntry(String name, String version, String author,
+                       String description, String descriptionLong,
+                       String[] compatibleVersions, int downloads,
+                       String license, String[] tags, String sourceCode,
+                       String sponsorLink, String wikiLink, Date lastUpdated,
+                       Date dateCreated, float rating, UUID[] screenshots) {
+        this.name = name;
+        this.version = version;
+        this.author = author;
+        this.description = description;
+        this.descriptionLong = descriptionLong;
+        this.compatibleVersions = compatibleVersions;
+        this.downloads = downloads;
+        this.license = license;
+        this.tags = tags;
+        this.sourceCode = sourceCode;
+        this.sponsorLink = sponsorLink;
+        this.wikiLink = wikiLink;
+        this.lastUpdated = lastUpdated;
+        this.dateCreated = dateCreated;
+        this.rating = rating;
+        this.screenshots = screenshots;
+    }
+
+    public PluginEntry() {}
 }
