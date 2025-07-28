@@ -9,6 +9,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class PluginEntry {
+    private UUID uniqueId;
     private String name;
     private String version;
     private String author;
@@ -26,12 +27,13 @@ public class PluginEntry {
     private float rating;
     private UUID[] screenshots;
 
-    public PluginEntry(String name, String version, String author,
-                       String description, String descriptionLong,
-                       String[] compatibleVersions, int downloads,
-                       String license, String[] tags, String sourceCode,
-                       String sponsorLink, String wikiLink, Date lastUpdated,
-                       Date dateCreated, float rating, UUID[] screenshots) {
+    public PluginEntry(UUID uniqueId, String name, String version,
+                       String author, String description, String descriptionLong,
+                       String[] compatibleVersions, int downloads, String license,
+                       String[] tags, String sourceCode, String sponsorLink,
+                       String wikiLink, Date lastUpdated, Date dateCreated,
+                       float rating, UUID[] screenshots) {
+        this.uniqueId = uniqueId;
         this.name = name;
         this.version = version;
         this.author = author;

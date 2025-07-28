@@ -1,6 +1,7 @@
 package de.julianweinelt.caesar.storage;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.vdurmont.semver4j.Semver;
 import de.julianweinelt.caesar.CaesarEndpoint;
 import de.julianweinelt.caesar.web.PluginEntry;
@@ -8,6 +9,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -61,35 +64,7 @@ public class MySQL {
         }
     }
 
-    public void createTables() {
-        try {
-            conn.createStatement().execute("""
-            
-                CREATE TABLE plugin_entries (
-                uuid                CHAR(36) NOT NULL PRIMARY KEY,
-                name                VARCHAR(255) NOT NULL,
-                version             VARCHAR(50) NOT NULL,
-                author              VARCHAR(255) NOT NULL,
-                description         TEXT,
-                description_long    TEXT,
-                compatible_versions JSON,
-                downloads           INT UNSIGNED DEFAULT 0,
-                license             VARCHAR(100),
-                tags                JSON,
-                source_code         VARCHAR(2083),
-                sponsor_link        VARCHAR(2083),
-                wiki_link           VARCHAR(2083),
-                last_updated        TIMESTAMP NULL DEFAULT NULL,
-                date_created        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                rating              FLOAT DEFAULT 0,
-                screenshots         JSON
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-            
-            """);
-        } catch (SQLException e) {
-            log.error("Failed to create tables: {}", e.getMessage());
-        }
-    }
+    public void createTables() {}
 
     public PluginEntry getPlugin(UUID uuid) {
         Gson gson = new Gson();
@@ -123,6 +98,83 @@ public class MySQL {
             log.error("Failed to get plugin: {}", e.getMessage());
         }
         return null;
+    }
+
+    public boolean importPlugin(PluginEntry entry) {
+        String sql = "INSERT INTO plugin_entries (" +
+                "uuid, name, version, author, description, description_long, " +
+                "compatible_versions, downloads, license, tags, source_code, " +
+                "sponsor_link, wiki_link, last_updated, date_created, rating, screenshots" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        Gson gson = new Gson();
+
+        try (PreparedStatement pS = conn.prepareStatement(sql)) {
+            pS.setString(1, entry.getUniqueId().toString());
+            pS.setString(2, entry.getName());
+            pS.setString(3, entry.getVersion());
+            pS.setString(4, entry.getAuthor());
+            pS.setString(5, entry.getDescription());
+            pS.setString(6, entry.getDescriptionLong());
+            pS.setString(7, gson.toJson(entry.getCompatibleVersions()));
+            pS.setInt(8, entry.getDownloads());
+            pS.setString(9, entry.getLicense());
+            pS.setString(10, gson.toJson(entry.getTags()));
+            pS.setString(11, entry.getSourceCode());
+            pS.setString(12, entry.getSponsorLink());
+            pS.setString(13, entry.getWikiLink());
+            pS.setTimestamp(14, new Timestamp(entry.getLastUpdated().getTime()));
+            pS.setTimestamp(15, new Timestamp(entry.getDateCreated().getTime()));
+            pS.setFloat(16, entry.getRating());
+            pS.setString(17, gson.toJson(entry.getScreenshots())); // UUID[] → JSON
+
+            pS.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            log.error("Fehler beim Import des Plugins: {}", e.getMessage());
+            return false;
+        }
+    }
+
+
+    public List<PluginEntry> getPlugins() {
+        List<PluginEntry> entries = new ArrayList<>();
+        Gson gson = new Gson();
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT uuid, name, version, author, p.description, " +
+                    "description_long, compatible_versions, downloads, license, tags, " +
+                    "source_code, sponsor_link, wiki_link, last_updated, date_created, " +
+                    "rating, screenshots, AccountID, UserName, IsDeveloper, IsVerified, " +
+                    "AccountStatus, AccountCreated, a.UserName AS UserName FROM plugin_entries AS p " +
+                    "LEFT JOIN accounts AS a ON p.author = a.AccountID");
+            ResultSet set = pS.executeQuery();
+            while (set.next()) {
+                PluginEntry entry = new PluginEntry();
+
+                entry.setName(set.getString("name"));
+                entry.setVersion(set.getString("version"));
+                entry.setAuthor(set.getString("UserName"));
+                entry.setDescription(set.getString("description"));
+                entry.setDescriptionLong(set.getString("description_long"));
+                entry.setCompatibleVersions(gson.fromJson(set.getString("compatible_versions"), String[].class));
+                entry.setDownloads(set.getInt("downloads"));
+                entry.setLicense(set.getString("license"));
+                entry.setTags(gson.fromJson(set.getString("tags"), String[].class));
+                entry.setSourceCode(set.getString("source_code"));
+                entry.setSponsorLink(set.getString("sponsor_link"));
+                entry.setWikiLink(set.getString("wiki_link"));
+                entry.setLastUpdated(set.getTimestamp("last_updated"));
+                entry.setDateCreated(set.getTimestamp("date_created"));
+                entry.setRating(set.getFloat("rating"));
+                entry.setScreenshots(gson.fromJson(set.getString("screenshots"), UUID[].class));
+
+                entries.add(entry);
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get plugin: {}", e.getMessage());
+        }
+        log.info("Loaded {} plugins", entries.size());
+        return entries;
     }
 
     public UUID getPluginID(String name) {
@@ -170,6 +222,117 @@ public class MySQL {
             if (set.next()) return UUID.fromString(set.getString("FileHash"));
         } catch (SQLException e) {
             log.error("Failed to get plugin file: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public UUID createAccount(String eMail, String password, String username) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("INSERT INTO accounts (AccountID, UserName, " +
+                    "IsDeveloper, IsVerified, AccountStatus, AccountCreated, eMail, PasswordHashed)" +
+                    " VALUES (?, ?, 0, 0, '', CURRENT_TIMESTAMP, ?, ?)");
+            UUID uuid = UUID.randomUUID();
+            pS.setString(1, uuid.toString());
+            pS.setString(2, username);
+            pS.setString(3, eMail);
+            pS.setString(4, password);
+            int rows = pS.executeUpdate();
+            log.info("Created new account {}", uuid);
+            log.info("Updated {} rows", rows);
+            return uuid;
+        } catch (SQLException e) {
+            log.error("Failed to create account: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public JsonObject getAccount(UUID uuid) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE AccountID = ?");
+            pS.setString(1, uuid.toString());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("ID", set.getString("AccountID"));
+                o.addProperty("username", set.getString("UserName"));
+                o.addProperty("password", set.getString("PasswordHashed"));
+                return o;
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get account: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public JsonObject getAccount(String eMail) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE eMail = ?");
+            pS.setString(1, eMail);
+            ResultSet set = pS.executeQuery();
+            if (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("ID", set.getString("AccountID"));
+                o.addProperty("username", set.getString("UserName"));
+                o.addProperty("password", set.getString("PasswordHashed"));
+                return o;
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get account: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public JsonObject getProfile(UUID uuid) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE AccountID = ?");
+            pS.setString(1, uuid.toString());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("ID", set.getString("AccountID"));
+                o.addProperty("username", set.getString("UserName"));
+                o.addProperty("description", set.getString("Description"));
+                o.addProperty("verified", set.getBoolean("IsVerified"));
+                o.addProperty("developer", set.getBoolean("IsDeveloper"));
+                o.addProperty("created", set.getLong("AccountCreated"));
+                return o;
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get account: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public void setImageType(UUID uuid, String imageType) {
+        checkConnection();
+        try {
+            PreparedStatement pS = conn.prepareStatement("INSERT INTO image_meta (ImageID, DataType) VALUES (?, ?)");
+            pS.setString(1, uuid.toString());
+            pS.setString(2, imageType);
+            pS.execute();
+        } catch (SQLException e) {
+            log.error("Failed to set image type: {}", e.getMessage());
+        }
+    }
+
+    public String getImageType(UUID imageID) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT DataType FROM image_meta WHERE ImageID = ?");
+            pS.setString(1, imageID.toString());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) return set.getString(1);
+        } catch (SQLException e) {
+            log.error("Failed to get image type: {}", e.getMessage());
         }
         return null;
     }

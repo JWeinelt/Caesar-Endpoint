@@ -14,7 +14,9 @@ public class CaesarEndpoint {
     private static CaesarEndpoint instance;
     @Getter
     private LocalStorage localStorage;
+    @Getter
     private Endpoint endpoint;
+    @Getter
     private DiscordBot discordBot;
 
     @Getter

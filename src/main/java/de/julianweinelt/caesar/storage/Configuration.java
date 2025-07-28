@@ -11,4 +11,6 @@ public class Configuration {
     private String databaseName = "caesar";
     private String databaseUser = "caesar";
     private String databasePassword = "secret";
+
+    private String discordSecret = "secret";
 }
