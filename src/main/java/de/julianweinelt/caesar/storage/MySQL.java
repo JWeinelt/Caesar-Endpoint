@@ -1,6 +1,8 @@
 package de.julianweinelt.caesar.storage;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.vdurmont.semver4j.Semver;
 import de.julianweinelt.caesar.CaesarEndpoint;
@@ -16,6 +18,7 @@ import java.util.UUID;
 @Slf4j
 @Getter
 public class MySQL {
+    private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private Connection conn;
 
     private Configuration data;
@@ -24,13 +27,13 @@ public class MySQL {
         return CaesarEndpoint.getInstance().getMySQL();
     }
 
-    public boolean connect() {
+    public void connect() {
         data = LocalStorage.getInstance().getData();
 
         final String DRIVER = "com.mysql.cj.jdbc.Driver";
-        final String PARAMETEset = "?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+        final String PARAMETERS = "?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&autoReconnect=true";
         final String URL = "jdbc:mysql://" + data.getDatabaseHost() + ":" + data.getDatabasePort() + "/" +
-                           data.getDatabaseName() + PARAMETEset;
+                           data.getDatabaseName() + PARAMETERS;
         final String USER = data.getDatabaseUser();
         final String PASSWORD = data.getDatabasePassword();
 
@@ -40,16 +43,17 @@ public class MySQL {
             conn = DriverManager.getConnection(URL, USER, PASSWORD);
             log.info("Connected to MySQL database: {}", URL);
             conn.createStatement().execute("USE " + data.getDatabaseName());
-            return true;
         } catch (Exception e) {
             log.error("Failed to connect to MySQL database: {}", e.getMessage());
         }
-        return false;
     }
 
 
     public void disconnect() {
         try {
+            log.info("Closing remaining transactions...");
+            conn.commit();
+            log.info("Closing connection...");
             conn.close();
         } catch (SQLException e) {
             log.error("Failed to disconnect from MySQL database: {}", e.getMessage());
@@ -69,7 +73,8 @@ public class MySQL {
     public PluginEntry getPlugin(UUID uuid) {
         Gson gson = new Gson();
         try {
-            PreparedStatement pS = conn.prepareStatement("SELECT * FROM plugin_entries WHERE uuid = ?");
+            PreparedStatement pS = conn.prepareStatement("SELECT * FROM plugin_entries AS p " +
+                    "LEFT JOIN accounts AS a ON p.author = a.AccountID WHERE uuid = ?");
             pS.setString(1, uuid.toString());
             ResultSet set = pS.executeQuery();
             if (set.next()) {
@@ -77,7 +82,7 @@ public class MySQL {
 
                 entry.setName(set.getString("name"));
                 entry.setVersion(set.getString("version"));
-                entry.setAuthor(set.getString("author"));
+                entry.setAuthor(set.getString("UserName"));
                 entry.setDescription(set.getString("description"));
                 entry.setDescriptionLong(set.getString("description_long"));
                 entry.setCompatibleVersions(gson.fromJson(set.getString("compatible_versions"), String[].class));
@@ -89,7 +94,7 @@ public class MySQL {
                 entry.setWikiLink(set.getString("wiki_link"));
                 entry.setLastUpdated(set.getTimestamp("last_updated"));
                 entry.setDateCreated(set.getTimestamp("date_created"));
-                entry.setRating(set.getFloat("rating"));
+                entry.setRating(getPluginRating(uuid));
                 entry.setScreenshots(gson.fromJson(set.getString("screenshots"), UUID[].class));
 
                 return entry;
@@ -100,7 +105,7 @@ public class MySQL {
         return null;
     }
 
-    public boolean importPlugin(PluginEntry entry) {
+    public void importPlugin(PluginEntry entry) {
         String sql = "INSERT INTO plugin_entries (" +
                 "uuid, name, version, author, description, description_long, " +
                 "compatible_versions, downloads, license, tags, source_code, " +
@@ -129,52 +134,54 @@ public class MySQL {
             pS.setString(17, gson.toJson(entry.getScreenshots())); // UUID[] → JSON
 
             pS.executeUpdate();
-            return true;
         } catch (SQLException e) {
-            log.error("Fehler beim Import des Plugins: {}", e.getMessage());
-            return false;
+            log.error("Error while importing plugin: {}", e.getMessage());
         }
+    }
+
+    public int getFollowers(UUID uuid) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT COUNT(DISTINCT AccountFollowing) AS Followers FROM account_followers WHERE AccountID = ?");
+            pS.setString(1, uuid.toString());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) return set.getInt(1);
+        } catch (SQLException e) {
+            log.error("Error while loading follower count: {}", e.getMessage());
+        }
+        return 0;
     }
 
 
     public List<PluginEntry> getPlugins() {
         List<PluginEntry> entries = new ArrayList<>();
-        Gson gson = new Gson();
         try {
-            PreparedStatement pS = conn.prepareStatement("SELECT uuid, name, version, author, p.description, " +
-                    "description_long, compatible_versions, downloads, license, tags, " +
-                    "source_code, sponsor_link, wiki_link, last_updated, date_created, " +
-                    "rating, screenshots, AccountID, UserName, IsDeveloper, IsVerified, " +
-                    "AccountStatus, AccountCreated, a.UserName AS UserName FROM plugin_entries AS p " +
-                    "LEFT JOIN accounts AS a ON p.author = a.AccountID");
+            PreparedStatement pS = conn.prepareStatement("SELECT uuid FROM plugin_entries");
             ResultSet set = pS.executeQuery();
             while (set.next()) {
-                PluginEntry entry = new PluginEntry();
-
-                entry.setName(set.getString("name"));
-                entry.setVersion(set.getString("version"));
-                entry.setAuthor(set.getString("UserName"));
-                entry.setDescription(set.getString("description"));
-                entry.setDescriptionLong(set.getString("description_long"));
-                entry.setCompatibleVersions(gson.fromJson(set.getString("compatible_versions"), String[].class));
-                entry.setDownloads(set.getInt("downloads"));
-                entry.setLicense(set.getString("license"));
-                entry.setTags(gson.fromJson(set.getString("tags"), String[].class));
-                entry.setSourceCode(set.getString("source_code"));
-                entry.setSponsorLink(set.getString("sponsor_link"));
-                entry.setWikiLink(set.getString("wiki_link"));
-                entry.setLastUpdated(set.getTimestamp("last_updated"));
-                entry.setDateCreated(set.getTimestamp("date_created"));
-                entry.setRating(set.getFloat("rating"));
-                entry.setScreenshots(gson.fromJson(set.getString("screenshots"), UUID[].class));
+                PluginEntry entry = getPlugin(UUID.fromString(set.getString("uuid")));
 
                 entries.add(entry);
             }
         } catch (SQLException e) {
-            log.error("Failed to get plugin: {}", e.getMessage());
+            log.error("Failed to get plugins: {}", e.getMessage());
         }
-        log.info("Loaded {} plugins", entries.size());
+        log.debug("Loaded {} plugins", entries.size());
         return entries;
+    }
+
+    public float getPluginRating(UUID uuid) {
+        checkConnection();
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT AVG(Rating) AS Rating FROM plugin_ratings WHERE PluginID = ?");
+            pS.setString(1, uuid.toString());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) return set.getFloat(1);
+        } catch (SQLException e) {
+            log.error("Failed to get plugin ratings: {}", e.getMessage());
+        }
+        return 0.0F;
     }
 
     public UUID getPluginID(String name) {
@@ -248,26 +255,6 @@ public class MySQL {
         return null;
     }
 
-    public JsonObject getAccount(UUID uuid) {
-        checkConnection();
-
-        try {
-            PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE AccountID = ?");
-            pS.setString(1, uuid.toString());
-            ResultSet set = pS.executeQuery();
-            if (set.next()) {
-                JsonObject o = new JsonObject();
-                o.addProperty("ID", set.getString("AccountID"));
-                o.addProperty("username", set.getString("UserName"));
-                o.addProperty("password", set.getString("PasswordHashed"));
-                return o;
-            }
-        } catch (SQLException e) {
-            log.error("Failed to get account: {}", e.getMessage());
-        }
-        return null;
-    }
-
     public JsonObject getAccount(String eMail) {
         checkConnection();
 
@@ -283,13 +270,16 @@ public class MySQL {
                 return o;
             }
         } catch (SQLException e) {
-            log.error("Failed to get account: {}", e.getMessage());
+            log.error("Failed to get account by mail: {}", e.getMessage());
         }
         return null;
     }
 
     public JsonObject getProfile(UUID uuid) {
         checkConnection();
+        List<PluginEntry> pluginEntries = getPlugins();
+        List<PluginEntry> userPlugins = new ArrayList<>();
+        for (PluginEntry p : pluginEntries) if (p.getAuthor().equals(uuid.toString())) userPlugins.add(p);
 
         try {
             PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE AccountID = ?");
@@ -303,12 +293,52 @@ public class MySQL {
                 o.addProperty("verified", set.getBoolean("IsVerified"));
                 o.addProperty("developer", set.getBoolean("IsDeveloper"));
                 o.addProperty("created", set.getLong("AccountCreated"));
+                o.addProperty("lastOnline", set.getLong("LastOnline"));
+                o.addProperty("followers", getFollowers(uuid));
+                o.add("plugins", GSON.toJsonTree(userPlugins));
+                o.add("badges", getProfileBadges(uuid));
                 return o;
             }
         } catch (SQLException e) {
-            log.error("Failed to get account: {}", e.getMessage());
+            log.error("Failed to get profile: {}", e.getMessage());
         }
         return null;
+    }
+
+    public void addFollower(UUID account, UUID follower) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("INSERT INTO account_followers (AccountID, AccountFollowing) VALUES (?, ?)");
+            pS.setString(1, account.toString());
+            pS.setString(2, follower.toString());
+            pS.execute();
+        } catch (SQLException e) {
+            log.error("Failed to add follower: {}", e.getMessage());
+        }
+    }
+
+    public JsonArray getProfileBadges(UUID user) {
+        checkConnection();
+        JsonArray badges = new JsonArray();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT b.ID AS BadgeID, b.Name, b.Color " +
+                    "FROM account_badge_assignment AS a " +
+                    "LEFT OUTER JOIN badges AS b ON a.BadgeID = b.ID WHERE a.AccountID = ?");
+            pS.setString(1, user.toString());
+            ResultSet set = pS.executeQuery();
+            while (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("id", set.getString(1));
+                o.addProperty("name", set.getString(2));
+                o.addProperty("color", set.getString(3));
+                badges.add(o);
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get profile badges: {}", e.getMessage());
+        }
+        return badges;
     }
 
     public void setImageType(UUID uuid, String imageType) {

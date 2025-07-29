@@ -40,6 +40,21 @@ public class LocalStorage {
             log.error(e.getMessage());
         }
     }
+    public Configuration loadDataTemp() {
+        log.info("Loading local storage from disk...");
+        if (!configFile.exists()) saveData();
+        try (BufferedReader br = new BufferedReader(new FileReader(configFile))) {
+            StringBuilder jsonStringBuilder = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                jsonStringBuilder.append(line);
+            }
+            return GSON.fromJson(jsonStringBuilder.toString(), new TypeToken<Configuration>(){}.getType());
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+        return new Configuration();
+    }
 
 
     public void saveData() {

@@ -30,6 +30,8 @@ import java.util.stream.Stream;
 public class Endpoint {
     private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    private Javalin javalin;
+
     private final String CLIENT_LANG_VERSION = "1.0.0";
     private final String SERVER_LANG_VERSION = "1.0.0";
 
@@ -42,7 +44,7 @@ public class Endpoint {
         new File("./lang/server").mkdirs();
         new File("./lang/client").mkdirs();
 
-        Javalin app = Javalin.create(javalinConfig -> {
+        javalin = Javalin.create(javalinConfig -> {
                     MultipartConfig cfg = new MultipartConfig();
                     cfg.maxTotalRequestSize(100, SizeUnit.MB);
                     cfg.maxFileSize(100, SizeUnit.MB);
@@ -349,7 +351,6 @@ public class Endpoint {
                         ctx.status(404).result(ErrorHandler.createError(ErrorHandler.CommonError.MC_PLUGIN_NOT_FOUND));
                         return;
                     }
-
                 })
                 .start(48009);
     }
@@ -406,6 +407,15 @@ public class Endpoint {
         }
         String userID = decodedJWT.getSubject();
         return UUID.fromString(userID);
+    }
+
+    public void stop() {
+        if (javalin == null) {
+            log.warn("Web Service not running. Skipping shutdown process.");
+            return;
+        }
+
+        javalin.stop();
     }
 
     public enum ErrorType {
