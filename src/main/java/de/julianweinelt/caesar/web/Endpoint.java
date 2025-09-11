@@ -14,7 +14,6 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import io.javalin.http.UploadedFile;
 import io.javalin.http.staticfiles.Location;
-import jakarta.servlet.MultipartConfigElement;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
@@ -24,20 +23,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Slf4j
 public class Endpoint {
     private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private Javalin javalin;
-
-    private final String CLIENT_LANG_VERSION = "1.0.0";
-    private final String SERVER_LANG_VERSION = "1.0.0";
-
-    private final String CLIENT_MAIN_VERSION = "1.0.0";
-    private final String SERVER_MAIN_VERSION = "1.0.0";
-    private final String CONNECTOR_VERSION = "0.0.1";
 
 
     public void start() {
@@ -53,17 +44,15 @@ public class Endpoint {
                     javalinConfig.startupWatcherEnabled = false;
 
                     javalinConfig.jetty.multipartConfig = cfg;
+                    javalinConfig.staticFiles.add("", Location.EXTERNAL);
                 })
                 .before(ctx -> {
                     ctx.header("Access-Control-Allow-Origin", "*");
                     ctx.header("Access-Control-Allow-Credentials", "true");
                 })
                 .get("/versions", ctx -> {
-                    JsonObject json = new JsonObject();
-                    json.addProperty("client", "1.0.0");
-                    json.addProperty("server", "1.0.0");
-                    json.addProperty("connector", "1.0.0");
-                    ctx.result(json.toString()).status(200);
+                    String content = new String(Files.readAllBytes(Paths.get("versions.json")));
+                    ctx.result(content).status(200);
                 })
                 .get("/public/language/server/{language}", ctx -> {
                     ctx.contentType("application/json");
@@ -106,6 +95,11 @@ public class Endpoint {
                 })
                 .get("/public/download/mc-icons", ctx -> {
                     File file = new File("downloads/misc/minecraft-icons.zip");
+                    FileInputStream fis = new FileInputStream(file);
+                    ctx.result(fis);
+                })
+                .get("/public/download/client/{version}", ctx -> {
+                    File file = new File("downloads/client/" + ctx.pathParam("version") + ".zip");
                     FileInputStream fis = new FileInputStream(file);
                     ctx.result(fis);
                 })
