@@ -21,11 +21,15 @@ public class DiscordBot {
     private JDA jda;
 
     public void start() {
-        log.info("Starting Discord Bot");
-        jda = JDABuilder.createDefault(Configuration.getInstance().getDiscordSecret(), Arrays.asList(GatewayIntent.values()))
-                .build();
-        try {jda.awaitReady();} catch (InterruptedException ignored) {}
-        jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.customStatus("Working at Caesar Marketplace"));
+        try {
+            log.info("Starting Discord Bot");
+            jda = JDABuilder.createDefault(Configuration.getInstance().getDiscordSecret(), Arrays.asList(GatewayIntent.values()))
+                    .build();
+            try {jda.awaitReady();} catch (InterruptedException ignored) {}
+            jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.customStatus("Working at Caesar Marketplace"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void stop() {
