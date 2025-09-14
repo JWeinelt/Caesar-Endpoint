@@ -103,6 +103,11 @@ public class Endpoint {
                     FileInputStream fis = new FileInputStream(file);
                     ctx.result(fis);
                 })
+                .get("/public/download/worker/{version}", ctx -> {
+                    File file = new File("downloads/worker/" + ctx.pathParam("version") + "/CaesarWorker.exe");
+                    FileInputStream fis = new FileInputStream(file);
+                    ctx.result(fis);
+                })
 
                 .get("/api/market/profile/{name}", ctx -> {
                     String user = ctx.pathParam("name");
