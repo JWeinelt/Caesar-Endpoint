@@ -292,8 +292,8 @@ public class MySQL {
                 o.addProperty("description", set.getString("Description"));
                 o.addProperty("verified", set.getBoolean("IsVerified"));
                 o.addProperty("developer", set.getBoolean("IsDeveloper"));
-                o.addProperty("created", set.getLong("AccountCreated"));
-                o.addProperty("lastOnline", set.getLong("LastOnline"));
+                o.addProperty("created", set.getString("AccountCreated"));
+                o.addProperty("lastOnline", set.getString("LastOnline"));
                 o.addProperty("followers", getFollowers(uuid));
                 o.add("plugins", GSON.toJsonTree(userPlugins));
                 o.add("badges", getProfileBadges(uuid));
