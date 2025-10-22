@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Plugin - Caesar Plugin Marketplace</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../style.css" rel="stylesheet">
+    <link href="/img/market_place.png" rel="icon">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+    <!-- Header -->
+    <header class="bg-blue-900 shadow-md py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-white">Caesar Plugin Marketplace</a>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="/" class="hover:text-blue-400">Home</a></li>
+                    <li><a href="/about" class="hover:text-blue-400">Über</a></li>
+                    <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
+                    <li><a href="/login" class="hover:text-blue-400">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto py-12">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <h2 class="text-3xl font-semibold text-blue-500 mb-6">Upload resource</h2>
+            <form id="pluginForm" action="/api/market/submit-plugin" method="POST" enctype="multipart/form-data" class="space-y-6">
+
+                <!-- Plugin Name -->
+                <div>
+                    <label for="pluginName" class="text-lg text-gray-300">Plugin Name</label>
+                    <input type="text" id="pluginName" name="pluginName" required placeholder="Give your plugin a good name" class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
+                </div>
+
+                <!-- Plugin Description -->
+                <div>
+                    <label for="pluginDescription" class="text-lg text-gray-300">Short Description</label>
+                    <textarea id="pluginDescription" name="pluginDescription" rows="2" required maxlength="200" draggable="false" placeholder="Descripe your plugin with just 2 sentences. What does it do? What benefits does it provide?" class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white"></textarea>
+                </div>
+
+                <!-- Plugin Version -->
+                <div>
+                    <label for="pluginVersion" class="text-lg text-gray-300">With which versions of Caesar is your plugin compatible?</label>
+                    <select id="pluginversion" name="pluginversion" required class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                        <option value="0.1">v0.1</option>
+                        <option value="0.2">v0.2</option>
+                    </select>
+                    <label for="backwards">My plugin provides backwards compatibility.</label>
+                    <input id="backwards" name="backwards" type="checkbox">
+                </div>
+
+                <!-- Plugin File Upload -->
+                <div>
+                    <label for="pluginFile" class="text-lg text-gray-300">Plugin File (JAR) <span class="underline text-blue-400"><sup><a href="#" id="info-upload">Why?</a></sup></span></label>
+                    <p id="info-up" class="hidden text-gray-400">We need one plugin JAR to make sure it's secure.</p>
+                    <input type="file" id="pluginFile" name="pluginFile" accept=".jar" required class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
+                </div>
+                
+                <!-- Plugin Logo upload -->
+                <div class="md:flex">
+                <div>
+                    <label for="pluginLogo" class="text-lg text-gray-300">Logo of your plugin</label>
+                    <input type="file" id="pluginLogo" name="pluginScreenshots" accept="image/*" class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
+                </div>
+
+                <!-- Screenshots Upload -->
+                <div>
+                    <label for="pluginScreenshots" class="text-lg text-gray-300">Screenshots</label>
+                    <input type="file" id="pluginScreenshots" name="pluginScreenshots" accept="image/*" multiple class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
+                    <p class="text-sm text-gray-400 mt-2">You may upload up 5 screenshots of your plugin. Each file must be smaller than 5MB.<br>We highly recommend uploading screenshots; it will help your plugin getting seen on marketplace.</p>
+                </div>
+                </div>
+
+                <!-- Category selection -->
+                <div>
+                    <label for="pluginCategory" class="text-lg text-gray-300">Category of your plugin</label>
+                    <p class="text-sm text-gray-400 mt-2">Select one main category for your plugin. It will be used to filter plugins in searches.</p>
+                    <select id="pluginCategory" name="pluginCategory" required class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                        <option value="tools">Administration</option>
+                        <option value="rpg">Integration</option>
+                        <option value="minigame">Mini games</option>
+                        <option value="utility">Utility</option>
+                        <option value="economy">Economy</option>
+                    </select>
+                </div>
+                
+                <!-- Long description -->
+                <div>
+                    <label for="pluginDescriptionLong" class="text-lg text-gray-300">Long description</label>
+                    <textarea id="pluginDescriptionLong" name="pluginDescriptionLong" rows="25" required maxlength="5000" draggable="false" placeholder="Descripe your work in detail. What does it do? What changes are brought by it?" class="w-full p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white"></textarea>
+                </div>
+                
+                
+                <div>
+                    <p class="text-lg text-gray-300">Links</p>
+                    <p class="text-sm text-gray-400 mt-2">Here you have some space to provide links for the user. These will be displayed on top of your page.<br>Links <b>must always</b> begin with <code>https://</code></p>
+                    <label for="githublink">GitHub Repository</label>
+                    <input id="githublink" name="githublink" type="text" class="w-full h-12 p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" placeholder="GitHub link">
+                    <label for="wikilink">Wiki page</label>
+                    <input id="wikilink" name="wikilink" type="text" class="w-full h-12 p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" placeholder="Link to your wiki, e.g. https://wiki.someplugin.com">
+                    <label for="sponsorlink">Sponsoring</label>
+                    <input id="sponsorlink" name="sponsorlink" type="text" class="w-full h-12 p-3 mt-2 bg-gray-700 border border-gray-600 rounded-md text-white" placeholder="Link to a website where users can sponsor your project">
+                    <p class="text-sm text-gray-400 mt-2">Allowed sites: patreon.com, github.com, host-unlimited.de, buymeacoffee.com</p>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="p-4 bg-blue-500 hover:bg-blue-400 rounded-md text-white text-lg">Upload plugin</button>
+                </div>
+            </form>
+            <script src="/cookies.js"></script>
+            <script>
+                document.getElementById("pluginForm").addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const form = event.target;
+                    const formData = new FormData(form);
+
+                    try {
+                        const response = await fetch("/api/market/submit-plugin", {
+                            method: "POST",
+                            headers: {
+                                'Authorization': 'Bearer ' + getCookie('token')
+                            },
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Fehler beim Hochladen: " + response.status);
+                        }
+
+                        alert("Upload erfolgreich!");
+                    } catch (err) {
+                        console.error(err);
+                        alert("Ein Fehler ist aufgetreten.");
+                    }
+                });
+            </script>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-900 py-4 mt-12">
+        <div class="container mx-auto text-center text-sm text-gray-400">
+            <p>&copy; 2025 Caesar Plugin-Marktplatz. Alle Rechte vorbehalten.</p>
+            <p>Impressum | Datenschutz | AGB</p>
+        </div>
+    </footer>
+
+</body>
+</html>
