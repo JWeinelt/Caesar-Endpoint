@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
     <link href="/img/market_place.png" rel="icon">
+    <script src="../main-vars.js"></script>
 </head>
 <body class="bg-gray-900 text-white">
     
@@ -33,7 +34,7 @@
         <div class="flex flex-col md:flex-row md:justify-between mb-6">
             <input type="text" id="search" placeholder="Search for 1234 plugins..." class="w-full md:w-1/3 p-2 rounded bg-gray-800 border border-gray-700 text-white">
             <select id="category" class="w-full md:w-1/4 mt-4 md:mt-0 p-2 rounded bg-gray-800 border border-gray-700 text-white">
-                <option value="all" selected>All Categories</option>
+                <option value="all" selected=true>All Categories</option>
                 <option value="lib">Libraries</option>
                 <option value="util">Utility</option>
                 <option value="admin">Admin Tools</option>
@@ -56,9 +57,9 @@
             <p>Imprint | Privacy | Terms of service</p>
         </div>
     </footer>
+    <script src="../cookies.js"></script>
     <script src="query_search.js"></script>
-    <script src="/main.js"></script>
-    <script src="/cookies.js"></script>
+    <script src="../main.js"></script>
 
 </body>
 </html>

@@ -19,7 +19,7 @@ public class Configuration {
     private String databaseUser = "caesar";
     private String databasePassword = "secret";
 
-    private String discordSecret = "secret";
+    private String discordSecret = "";
     private final HashMap<String, String> discordChannels = new HashMap<>();
     private String discordGuild = "";
 

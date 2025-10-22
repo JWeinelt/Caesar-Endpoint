@@ -21,6 +21,7 @@ public class DiscordBot {
     private JDA jda;
 
     public void start() {
+        if (Configuration.getInstance().getDiscordSecret() == null || Configuration.getInstance().getDiscordSecret().isBlank()) return;
         try {
             log.info("Starting Discord Bot");
             jda = JDABuilder.createDefault(Configuration.getInstance().getDiscordSecret(), Arrays.asList(GatewayIntent.values()))

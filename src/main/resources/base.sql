@@ -1,4 +1,4 @@
-use caesar_market_test2;
+use caesar_market_test;
 
 
 create table account_followers

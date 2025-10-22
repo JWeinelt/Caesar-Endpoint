@@ -126,6 +126,11 @@ public class Endpoint {
                     UUID imageID = UUID.fromString(ctx.pathParam("id"));
                     log.info(imageID.toString());
                     String type = MySQL.getInstance().getImageType(imageID);
+                    if (type == null) {
+                        ctx.status(401);
+                        ctx.result(createErrorResponse(ErrorType.INTERNAL_ERROR));
+                        return;
+                    }
                     ctx.contentType(type);
                     if (typeI.equals("profile"))
                         ctx.result(new FileInputStream(FileManager.getInstance().getProfileImage(imageID)));
@@ -192,6 +197,32 @@ public class Endpoint {
                     ctx.result(GSON.toJson(entry));
                     ctx.status(200);
                 })
+                .get("/api/market/plugin/comment", ctx -> {
+                    UUID pluginID = null;
+                    String pluginName = null;
+                    if (ctx.queryParam("pluginName") != null) pluginName = ctx.queryParam("pluginName");
+                    if (ctx.queryParam("pluginID") != null) pluginID = UUID.fromString(ctx.queryParam("pluginID"));
+                    if (pluginID == null  && pluginName == null) {
+                        return;
+                    }
+                    if (pluginID == null) {
+                        pluginID = MySQL.getInstance().getPluginID(pluginName);
+                    }
+
+                    ctx.result(MySQL.getInstance().getPluginComments(pluginID).toString());
+                })
+                .post("/api/plugin/comment", ctx -> {
+                    JsonObject root = JsonParser.parseString(ctx.body()).getAsJsonObject();
+                    String pluginName = root.get("pluginName").getAsString();
+                    String content = root.get("content").getAsString();
+                    UUID author = getUserIDFromToken(ctx);
+                    if (author == null) {
+                        ctx.status(401).result(createErrorResponse(ErrorType.USER_NOT_FOUND));
+                        return;
+                    }
+                    MySQL.getInstance().createComment(pluginName, author, content);
+                    ctx.result(createSuccessResponse());
+                })
                 .post("/api/market/submit-plugin", ctx -> {
                     String pluginName = ctx.formParam("pluginName");
                     String shortDescription = ctx.formParam("pluginDescription");
@@ -209,7 +240,7 @@ public class Endpoint {
                         return;
                     }
 
-                    UploadedFile pluginLogo = ctx.uploadedFile("pluginLogo"); // Achtung! HTML-Feld heißt `pluginScreenshots`, sollte aber `pluginLogo` heißen
+                    UploadedFile pluginLogo = ctx.uploadedFile("pluginLogo");
 
                     List<UploadedFile> screenshots = ctx.uploadedFiles("pluginScreenshots");
 
@@ -226,6 +257,7 @@ public class Endpoint {
                     if (pluginLogo != null) {
                         try (InputStream in = pluginLogo.content()) {
                             Files.copy(in, FileManager.getInstance().getPluginLogo(pluginID).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            log.info("Saved plugin logo file");
                             MySQL.getInstance().setImageType(pluginID, pluginLogo.contentType());
                         }
                     }
@@ -257,6 +289,9 @@ public class Endpoint {
                     entry.setName(pluginName);
                     entry.setScreenshots(screenshotIDs.toArray(new UUID[0]));
                     entry.setRating(0);
+                    entry.setWikiLink(wiki);
+                    entry.setSponsorLink(sponsor);
+                    entry.setSourceCode(github);
                     MySQL.getInstance().importPlugin(entry);
                     ctx.result(createSuccessResponse());
                 })
@@ -282,6 +317,10 @@ public class Endpoint {
                     JsonObject body = JsonParser.parseString(ctx.body()).getAsJsonObject();
                     log.info(body.toString());
                     String eMail = body.get("email").getAsString();
+                    if (MySQL.getInstance().getAccount(eMail) != null) {
+                        ctx.status(401).result(createErrorResponse(ErrorType.USER_ALREADY_EXISTS));
+                        return;
+                    }
                     String password = body.get("password").getAsString();
                     String userName = body.get("username").getAsString();
                     UUID uuid = MySQL.getInstance().createAccount(eMail, password, userName);
@@ -289,6 +328,11 @@ public class Endpoint {
                         ctx.status(400);
                     } else {
                         ctx.status(HttpStatus.OK);
+
+                        File destination = FileManager.getInstance().userProfilePath(uuid);
+                        Files.copy(new File("./app/img/account_profile_placeholder.png").toPath(), destination.toPath());
+                        MySQL.getInstance().setImageType(uuid, "image/png");
+
                         JsonObject o = new JsonObject();
                         o.addProperty("success", true);
                         o.addProperty("uuid", uuid.toString());
@@ -428,9 +472,11 @@ public class Endpoint {
         USERNAME_INVALID,
         PASSWORD_INVALID,
         USER_NOT_FOUND,
+        USER_ALREADY_EXISTS,
         USER_DISABLED,
         INVALID_HEADER,
         INVALID_SETUP_CODE,
-        NO_PERMISSION
+        NO_PERMISSION,
+        INTERNAL_ERROR
     }
 }

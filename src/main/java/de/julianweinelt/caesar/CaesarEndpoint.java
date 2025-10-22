@@ -9,6 +9,8 @@ import de.julianweinelt.caesar.web.Endpoint;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 
 @Slf4j
 public class CaesarEndpoint {
@@ -30,30 +32,32 @@ public class CaesarEndpoint {
 
     public static void main(String[] args) {
         instance = new CaesarEndpoint();
-        instance.start();
+        instance.start(args);
     }
 
-    public void start() {
-        log.info("""
-                _____________________________________________________________________________
-                |                                                                           |
-                |      _____                                                                |
-                |     / / \\ \\                                                             |
-                |    / /| |\\ \\                                                            |
-                |   / / | | \\ \\                                                           |
-                |  / /  |_|  \\ \\                                                          |
-                | /_/___(_)___\\_\\                                                         |
-                |                                                                           |
-                |  This software should NOT be hosted by yourself!                          |
-                |  It provides the API for the Caesar Marketplace.                          |
-                |  You won't be able to use most of features and you don't have access      |
-                |  to any live data by the Caesar service.                                  |
-                |                                                                           |
-                |  Proceed at your own risk.                                                |
-                |  Caesar Endpoint is starting in 5 seconds...                              |
-                |___________________________________________________________________________|
-                """);
-        try {Thread.sleep(5000);} catch (InterruptedException ignored) {}
+    public void start(String[] args) {
+        if (!Arrays.stream(args).toList().contains("--intended-use")) {
+            log.info("""
+                    _____________________________________________________________________________
+                    |                                                                           |
+                    |      _____                                                                |
+                    |     / / \\ \\                                                             |
+                    |    / /| |\\ \\                                                            |
+                    |   / / | | \\ \\                                                           |
+                    |  / /  |_|  \\ \\                                                          |
+                    | /_/___(_)___\\_\\                                                         |
+                    |                                                                           |
+                    |  This software should NOT be hosted by yourself!                          |
+                    |  It provides the API for the Caesar Marketplace.                          |
+                    |  You won't be able to use most of features and you don't have access      |
+                    |  to any live data by the Caesar service.                                  |
+                    |                                                                           |
+                    |  Proceed at your own risk.                                                |
+                    |  Caesar Endpoint is starting in 5 seconds...                              |
+                    |___________________________________________________________________________|
+                    """);
+            try {Thread.sleep(5000);} catch (InterruptedException ignored) {}
+        }
 
         log.info("Starting up Caesar Endpoint public service...");
         log.info("Preparing files...");

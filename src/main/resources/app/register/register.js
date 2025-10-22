@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         }
 
+        let errtext = document.getElementById('errtext');
+
         console.log("Sending to http://localhost/api/market/user/register")
         hashSHA256(password).then(hashPW => {
             fetch(`http://${ADDRESS}/api/market/user/register`, {
@@ -29,15 +31,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!response.ok) {
                         console.error("Register failed")
                     }
-                    return response;
+                    return response.json();
                 })
-                .then(data => {
-                    var json = data.json();
+                .then(json => {
                     console.log(json);
                     if (json.success) {
                         setCookie("token", json.token, 30);
                         window.location.href = '/';
-                    } else console.log("No success??")
+                    } else {
+                        let reason = json.reason;
+                        errtext.innerText = reason;
+                        errtext.classList.remove('hidden');
+                    }
                 }).catch(error => {
                 console.error("Fehler:", error);
             });

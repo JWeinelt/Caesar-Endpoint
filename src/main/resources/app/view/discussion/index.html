@@ -8,6 +8,7 @@
     <link href="../../style.css" rel="stylesheet">
     <link href="/img/market_place.png" rel="icon">
     <script src="https://kit.fontawesome.com/85182ea83e.js" crossorigin="anonymous"></script>
+    <script src="../../main-vars.js"></script>
     
     <script>
         function openReportPopup() {
@@ -53,7 +54,8 @@
                     <li><a href="/" class="hover:text-blue-400">Home</a></li>
                     <li><a href="/about" class="hover:text-blue-400">About</a></li>
                     <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
-                    <li><a href="/login" class="hover:text-blue-400">Login</a></li>
+                    <li id="submit-resource" class="hidden"><a href="/upload" class="hover:text-blue-400">Submit Resource</a></li>
+                    <li><a id="login-button" href="/login" class="hover:text-blue-400">Login</a></li>
                 </ul>
             </nav>
         </div>
@@ -73,7 +75,7 @@
     
     <!-- Main Content -->
     <main class="container mx-auto py-12 flex flex-col gap-12">
-        <h1 class="text-4xl font-bold text-blue-500 mb-4">Plugin Name: Discussions</h1>
+        <h1 id="plugin-name" class="text-4xl font-bold text-blue-500 mb-4">Plugin Name: Discussions</h1>
         
         
             <!-- Comments Section -->
@@ -85,7 +87,7 @@
         <!-- Add Comment Form -->
                 <div class="mt-8">
                     <h3 class="text-xl font-semibold text-blue-500 mb-4">Add a Comment</h3>
-                    <textarea name="comment" rows="4" class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600" placeholder="Write your comment here..." required></textarea>
+                    <textarea id="comment-box" name="comment" rows="4" class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600" placeholder="Write your comment here..." required></textarea>
                     <button onclick="postComment();" class="mt-4 bg-blue-500 text-white py-3 rounded-lg w-40 hover:bg-blue-400 transition-all">Post Comment</button>
 
                 </div>
@@ -102,5 +104,7 @@
     <!-- JS for interactivity -->
     <script src="../pluginview.js"></script>
     <script src="index.js"></script>
+    <script src="../../cookies.js"></script>
+    <script src="../../main.js"></script>
 </body>
 </html>

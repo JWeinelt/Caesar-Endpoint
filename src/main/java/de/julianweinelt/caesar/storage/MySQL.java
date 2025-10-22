@@ -79,7 +79,7 @@ public class MySQL {
             ResultSet set = pS.executeQuery();
             if (set.next()) {
                 PluginEntry entry = new PluginEntry();
-
+                entry.setUniqueId(uuid);
                 entry.setName(set.getString("name"));
                 entry.setVersion(set.getString("version"));
                 entry.setAuthor(set.getString("UserName"));
@@ -275,6 +275,46 @@ public class MySQL {
         return null;
     }
 
+    public JsonObject getAccountByName(String userName) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE UserName = ?");
+            pS.setString(1, userName);
+            ResultSet set = pS.executeQuery();
+            if (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("ID", set.getString("AccountID"));
+                o.addProperty("username", set.getString("UserName"));
+                o.addProperty("password", set.getString("PasswordHashed"));
+                return o;
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get account by mail: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public JsonObject getAccount(UUID id) {
+        checkConnection();
+
+        try {
+            PreparedStatement pS = conn.prepareStatement("SELECT * FROM accounts WHERE AccountID = ?");
+            pS.setString(1, id.toString());
+            ResultSet set = pS.executeQuery();
+            if (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("ID", set.getString("AccountID"));
+                o.addProperty("username", set.getString("UserName"));
+                o.addProperty("password", set.getString("PasswordHashed"));
+                return o;
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get account by mail: {}", e.getMessage());
+        }
+        return null;
+    }
+
     public JsonObject getProfile(UUID uuid) {
         checkConnection();
         List<PluginEntry> pluginEntries = getPlugins();
@@ -365,5 +405,53 @@ public class MySQL {
             log.error("Failed to get image type: {}", e.getMessage());
         }
         return null;
+    }
+
+    public JsonArray getPluginComments(UUID plugin) {
+        checkConnection();
+
+        JsonArray array = new JsonArray();
+
+        try (PreparedStatement pS = conn.prepareStatement("SELECT RecordID, PluginID, AuthorID, AuthorName, " +
+                "Content, ThumbsUp, ThumbsDown, Creation FROM plugin_comments WHERE PluginID = ?")) {
+            pS.setString(1, plugin.toString());
+
+            ResultSet set = pS.executeQuery();
+            while (set.next()) {
+                JsonObject o = new JsonObject();
+                o.addProperty("RecordID", set.getString(1));
+                o.addProperty("PluginID", set.getString(2));
+                o.addProperty("AuthorID", set.getString(3));
+                o.addProperty("AuthorName", getAccountByName(set.getString(4)).get("username").getAsString());
+                o.addProperty("Content", set.getString(5));
+                o.addProperty("ThumbsUp", set.getInt(6));
+                o.addProperty("ThumbsDown", set.getInt(7));
+                o.addProperty("Created", set.getLong(8));
+
+                array.add(o);
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get plugin comments: {}", e.getMessage());
+        }
+        return array;
+    }
+
+    public void createComment(String pluginName, UUID author, String content) {
+        checkConnection();
+
+        UUID pluginID = getPluginID(pluginName);
+        String authorName = getAccount(author).get("username").getAsString();
+
+        try (PreparedStatement pS = conn.prepareStatement("INSERT INTO plugin_comments " +
+                "(PluginID, AuthorID, AuthorName, Content, Creation) VALUES (?, ?, ?, ?, UNIX_TIMESTAMP())")) {
+            pS.setString(1, pluginID.toString());
+            pS.setString(2, author.toString());
+            pS.setString(3, authorName);
+            pS.setString(4, content);
+
+            pS.execute();
+        } catch (SQLException e) {
+            log.error("Failed to create comment: {}", e.getMessage());
+        }
     }
 }

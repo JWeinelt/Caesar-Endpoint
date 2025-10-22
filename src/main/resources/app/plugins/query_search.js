@@ -4,7 +4,7 @@ let plugins = [];
 
 document.getElementById('category').value = 'all';
 
-fetch('http://localhost/api/market/plugin')
+fetch(`http://${ADDRESS}/api/market/plugin`)
   .then(response => {
     if (!response.ok) {
         console.log(response.url);

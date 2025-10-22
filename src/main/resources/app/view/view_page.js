@@ -16,10 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Antwort erhalten:', data);
             document.getElementById("plugin-version").textContent = "Version " + data.version;
+            document.getElementById('downloads').textContent = data.downloads + "";
+            document.getElementById("last-update").textContent = data.lastUpdated.substr(0, 12);
+            document.getElementById("creationDate").textContent = data.dateCreated.substr(0, 12);
             //if ("compatibleVersions" in data) document.getElementById("compatible-versions").textContent = "Caesar " + data.compatibleVersions[0];
             document.getElementById("plugin-name").textContent = data.name;
             document.getElementById("desc-short").textContent = data.description;
-            document.getElementById("desc-long").textContent = data.descriptionLong;
+            document.getElementById("desc-long").innerHTML = data.descriptionLong.replace('\n\r', '<br>');
             document.getElementById("author").textContent = data.author;
             if ("license" in data) {
                 document.getElementById("license").textContent = data.license;
@@ -27,29 +30,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById("license-line").classList.add("hidden");
             }
 
-            if ("sourceCode" in data) {
-                document.getElementById("source-code-link").textContent = data.sourceCode;
+            if ("sourceCode" in data && data.sourceCode !== "") {
+                document.getElementById("source-code-link").innerHTML = `<i class="fa-brands fa-github"></i> GitHub`;
                 document.getElementById("source-code-link").href = data.sourceCode;
             } else {
                 document.getElementById("source-code").classList.add("hidden");
             }
 
-            if ("sponsorLink" in data) {
+            if ("sponsorLink" in data && data.sponsorLink !== "") {
                 document.getElementById("sponsor-link").href = data.sponsorLink;
                 document.getElementById("sponsor-link").textContent = data.sponsorLink;
             } else {
                 document.getElementById("sponsor").classList.add("hidden");
             }
 
-            if ("wikiLink" in data) {
+            if ("wikiLink" in data && data.wikiLink !== "") {
                 document.getElementById("wiki-link").href = data.wikiLink;
                 document.getElementById("wiki-link").textContent = data.wikiLink;
             } else {
                 document.getElementById("wiki").classList.add("hidden");
             }
+            document.getElementById("pl-logo").src = `http://${ADDRESS}/api/image/` + data.uniqueId + "?type=plogo";
             if ("screenshots" in data) {
                 document.getElementById("screen1").src = `http://${ADDRESS}/api/image/` + data.screenshots[0] + "?type=screenshot";
-                document.getElementById("screen2").src = `http://${ADDRESS}/api/image/` + data.screenshots[1] + "?type=screenshot";
+                if (data.screenshots.length >= 2) {
+                    document.getElementById("screen2").src = `http://${ADDRESS}/api/image/` + data.screenshots[1] + "?type=screenshot";
+                } else document.getElementById("screen2").classList.add("hidden");
             }
         })
         .catch(error => {

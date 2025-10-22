@@ -75,15 +75,16 @@
     <main class="container mx-auto py-12 flex flex-col md:flex-row gap-12">
         <!-- Sidebar with Plugin Info -->
         <aside class="w-full md:w-1/4 bg-gray-800 p-4 rounded-lg shadow-md">
-            <img src="plugin-image.jpg" alt="Plugin Image" class="w-full h-auto rounded-lg shadow-lg mb-4">
+            <img id="pl-logo" src="" alt="Plugin Image" class="w-32 h-auto rounded-lg shadow-lg mb-4">
             <h3 class="text-xl font-semibold text-blue-400 mb-4">Information</h3>
             <p class="text-sm text-gray-400"><strong><i class="fa-solid fa-user"></i> Author:</strong> <span id="author">John Doe</span></p>
             <p class="text-sm text-gray-400"><strong><i class="fa-solid fa-download"></i> Downloads:</strong> <span id="downloads">0</span></p>
+            <p class="text-sm text-gray-400"><strong><i class="fa-solid fa-pencil"></i> Created:</strong> <span id="creationDate">March 2025</span></p>
             <p class="text-sm text-gray-400"><strong><i class="fa-solid fa-pencil"></i> Last Updated:</strong> <span id="last-update">March 2025</span></p>
             <p id="license-line" class="text-sm text-gray-400"><strong><i class="fa-solid fa-stapler"></i> License:</strong> <span id="license">MIT</span></p><br>
-            <p id="source-code" class="text-sm text-gray-400"><strong><i class="fa-solid fa-code"></i> Source code: </strong><a id="source-code-link" href="https://github.com/example" class="text-blue-400">github.com/example</a></p>
-            <p id="sponsor" class="text-sm text-gray-400"><strong><i class="fa-solid fa-money-bill-wave"></i> Sponsor Link: </strong><a id="sponsor-link" href="https://patreon.com/sponsor" class="text-blue-400">patreon.com/sponsor</a></p>
-            <p id="wiki" class="text-sm text-gray-400"><strong><i class="fa-solid fa-book"></i> Wiki: </strong><a id="wiki-link" href="https://wiki.someplugin.com" class="text-blue-400">wiki.someplugin.com</a></p><br><br>
+            <p id="source-code" class="text-sm text-gray-400"><strong><i class="fa-solid fa-code"></i> Source code: </strong><a id="source-code-link" target="_blank" href="https://github.com/example" class="text-blue-400">github.com/example</a></p>
+            <p id="sponsor" class="text-sm text-gray-400"><strong><i class="fa-solid fa-money-bill-wave"></i> Sponsor Link: </strong><a id="sponsor-link" target="_blank" href="https://patreon.com/sponsor" class="text-blue-400">patreon.com/sponsor</a></p>
+            <p id="wiki" class="text-sm text-gray-400"><strong><i class="fa-solid fa-book"></i> Wiki: </strong><a id="wiki-link" href="https://wiki.someplugin.com" target="_blank" class="text-blue-400">wiki.someplugin.com</a></p><br><br>
             <p class="text-sm text-gray-400"><i class="fa-solid fa-flag"></i> <a class="underline text-blue-400 cursor-pointer" onclick="openReportPopup()">Report this</a></p>
         </aside>
 
@@ -111,7 +112,7 @@
             
             <!-- Plugin Details -->
             <section>
-                <h2 class="text-2xl font-semibold text-blue-500 mb-4">Details</h2>
+                <h2 class="text-2xl font-semibold text-blue-500 mb-4">About this plugin</h2>
                 <p id="desc-long" class="text-sm text-gray-400 mb-4">Längere Beschreibung des Plugins, wie es funktioniert, welche Funktionen es enthält und wie es eingesetzt werden kann.</p>
 
                 <h3 class="text-xl font-semibold text-blue-400 mb-2">Screenshots</h3>
@@ -172,5 +173,6 @@
     <script src="/cookies.js"></script>
     <script src="view_page.js"></script>
     <script src="pluginview.js"></script>
+    <script src="../main.js"></script>
 </body>
 </html>
