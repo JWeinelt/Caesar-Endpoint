@@ -44,7 +44,7 @@ public class Endpoint {
                     javalinConfig.startupWatcherEnabled = false;
 
                     javalinConfig.jetty.multipartConfig = cfg;
-                    javalinConfig.staticFiles.add("", Location.EXTERNAL);
+                    javalinConfig.staticFiles.add("app", Location.EXTERNAL);
                 })
                 .before(ctx -> {
                     ctx.header("Access-Control-Allow-Origin", "*");
@@ -122,11 +122,15 @@ public class Endpoint {
                 })
 
                 .get("/api/image/{id}", ctx -> {
+                    String typeI = (ctx.queryParam("type") == null) ? "profile" : ctx.queryParam("type");
                     UUID imageID = UUID.fromString(ctx.pathParam("id"));
                     log.info(imageID.toString());
                     String type = MySQL.getInstance().getImageType(imageID);
                     ctx.contentType(type);
-                    ctx.result(new FileInputStream(FileManager.getInstance().getProfileImage(imageID)));
+                    if (typeI.equals("profile"))
+                        ctx.result(new FileInputStream(FileManager.getInstance().getProfileImage(imageID)));
+                    else if (typeI.equals("screenshot")) ctx.result(new FileInputStream(FileManager.getInstance().getScreenShot(imageID)));
+                    else if (typeI.equals("plogo")) ctx.result(new FileInputStream(FileManager.getInstance().getPluginLogo(imageID)));
                 })
                 .post("/api/image/screenshot/{plugin}", ctx -> {
                     UploadedFile uploadedFile = ctx.uploadedFile("file");
