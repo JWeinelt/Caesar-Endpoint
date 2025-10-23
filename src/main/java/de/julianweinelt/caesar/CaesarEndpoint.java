@@ -5,7 +5,10 @@ import de.julianweinelt.caesar.discord.DiscordBot;
 import de.julianweinelt.caesar.storage.Configuration;
 import de.julianweinelt.caesar.storage.LocalStorage;
 import de.julianweinelt.caesar.storage.MySQL;
+import de.julianweinelt.caesar.storage.data.PluginManager;
+import de.julianweinelt.caesar.storage.data.UserManager;
 import de.julianweinelt.caesar.web.Endpoint;
+import de.julianweinelt.caesar.web.mail.EMailUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +29,13 @@ public class CaesarEndpoint {
 
     @Getter
     private FileManager fileManager;
+    @Getter
+    private EMailUtil mailUtil;
+
+    @Getter
+    private PluginManager pluginManager;
+    @Getter
+    private UserManager userManager;
 
     @Getter
     private MySQL mySQL;
@@ -65,6 +75,8 @@ public class CaesarEndpoint {
         log.info("Preparing local storage provider...");
         localStorage = new LocalStorage();
         localStorage.loadData();
+        pluginManager = new PluginManager();
+        userManager = new UserManager();
         log.info("Starting Web Endpoint...");
         endpoint = new Endpoint();
         endpoint.start();
@@ -77,6 +89,7 @@ public class CaesarEndpoint {
         mySQL.connect();
         mySQL.createTables();
         log.info("Done! Caesar Endpoint has been started.");
+        mailUtil = new EMailUtil(localStorage.getData());
         log.info("All services are up and running.");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
