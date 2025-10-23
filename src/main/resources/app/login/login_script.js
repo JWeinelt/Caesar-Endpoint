@@ -23,16 +23,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(json => {
-                    console.log(json);
                     if (json.success) {
                         setCookie("token", json.token, 30);
+                        setCookie("username", json.username, 30);
+                        setCookie("userID", json.userID, 30);
                         window.location.href = '/';
                     } else {
-                        console.error("Login nicht erfolgreich:", json.message || "Unbekannter Fehler");
+                        console.error("Login failed: ", json.reason || "An unknown error occurred");
                     }
                 })
                 .catch(error => {
-                    console.error("Fehler:", error);
+                    console.error("Error: ", error);
                 });
         });
 
@@ -43,6 +44,5 @@ async function hashSHA256(text) {
     const data = encoder.encode(text);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
