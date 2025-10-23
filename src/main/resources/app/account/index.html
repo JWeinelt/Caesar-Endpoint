@@ -3,62 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entwicklerprofil - Caesar Plugin Marketplace</title>
+    <title>Account - Caesar Plugin Marketplace</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="../style.css" rel="stylesheet">
     <script src="../main-vars.js"></script>
 </head>
 <body class="bg-gray-900 text-white font-sans">
 
-    <!-- Header -->
-    <header class="bg-blue-900 shadow-md py-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-white">Caesar Plugin Marketplace</a>
-            <nav>
-                <ul class="flex space-x-6">
-                    <li><a href="/" class="hover:text-blue-400">Home</a></li>
-                    <li><a href="/about" class="hover:text-blue-400">Über</a></li>
-                    <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
-                    <li id="submit-resource" class="hidden"><a href="/upload" class="hover:text-blue-400">Submit Resource</a></li>
-                    <li><a id="login-button" href="/login" class="hover:text-blue-400">Login</a></li>
-                </ul>
-            </nav>
+<!-- Header -->
+<header class="bg-blue-900 shadow-md py-4">
+    <div class="container mx-auto flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold text-white">Caesar Plugin Marketplace</a>
+        <nav>
+            <ul class="flex space-x-6">
+                <li><a href="/" class="hover:text-blue-400">Home</a></li>
+                <li><a href="/about" class="hover:text-blue-400">About</a></li>
+                <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
+                <li id="submit-resource" class="hidden"><a href="/upload" class="hover:text-blue-400">Submit Resource</a></li>
+                <li><a id="login-button" href="/login" class="hover:text-blue-400">Login</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto py-12 flex flex-col md:flex-row gap-8">
+
+    <!-- Sidebar -->
+    <aside class="bg-gray-800 rounded-lg shadow-lg w-full md:w-1/4 p-6 space-y-4">
+        <h2 class="text-xl font-semibold mb-4 text-gray-200">Settings</h2>
+        <nav class="flex flex-col space-y-2">
+            <button onclick="showSection('profile')" class="text-left px-4 py-2 rounded hover:bg-blue-700 transition">Profile</button>
+            <button onclick="showSection('appearance')" class="text-left px-4 py-2 rounded hover:bg-blue-700 transition">Appearance</button>
+            <button onclick="showSection('security')" class="text-left px-4 py-2 rounded hover:bg-blue-700 transition">Security</button>
+            <button onclick="showSection('account')" class="text-left px-4 py-2 rounded hover:bg-blue-700 transition">Account</button>
+        </nav>
+    </aside>
+
+    <!-- Content Area -->
+    <section id="settings-content" class="bg-gray-800 rounded-lg shadow-lg w-full md:w-3/4 p-8">
+
+        <!-- Profile Section -->
+        <div id="section-profile" class="settings-section">
+            <h2 class="text-2xl font-semibold mb-6">Profile</h2>
+
+            <div class="mb-6">
+                <label class="block mb-2 text-gray-300">Change username</label>
+                <input type="text" id="usernameInput" class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="New username">
+                <p class="block mb-2 text-gray-300">You can only change your username once every 30 days.</p>
+                <button class="mt-3 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Save</button>
+            </div>
+
+            <div class="mb-6">
+                <label class="block mb-2 text-gray-300">Change profile picture</label>
+                <input type="file" id="profilePicInput" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                <button onclick="handleUpload()" class="mt-3 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Upload</button>
+            </div>
+
+            <div class="mb-6">
+                <label class="block mb-2 text-gray-300">Change banner picture</label>
+                <input type="file" id="bannerInput" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                <button class="mt-3 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Upload</button>
+            </div>
+
+            <div>
+                <label class="block mb-2 text-gray-300">Change description</label>
+                <textarea id="bioInput" rows="4" class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write something about yourself..."></textarea>
+                <button class="mt-3 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Save</button>
+            </div>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto py-12">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
-            <input type="file" id="profilePicInput" class="curser-pointer inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition" />
-            <button onclick="handleUpload()">Hochladen</button>
+        <!-- Appearance Section -->
+        <div id="section-appearance" class="settings-section hidden">
+            <h2 class="text-2xl font-semibold mb-6">Appearance</h2>
 
-            <script>
-                async function handleUpload() {
-                    const input = document.getElementById('profilePicInput');
-                    if (input.files.length === 0) {
-                        alert("Bitte eine Datei auswählen.");
-                        return;
-                    }
+            <div class="mb-6">
+                <label for="themeSelect" class="block mb-2 text-gray-300 font-medium">Theme</label>
+                <select id="themeSelect" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="classic">Classic</option>
+                    <option value="modern">Modern</option>
+                </select>
+            </div>
 
-                    const file = input.files[0];
-                    await uploadProfilePicture(file);
-                }
-            </script>
+            <div class="mb-6">
+                <label for="languageSelect" class="block mb-2 text-gray-300 font-medium">Language</label>
+                <select id="languageSelect" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="en" selected>English (default)</option>
+                    <option value="de">German</option>
+                </select>
+            </div>
+
+            <button class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Save</button>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="bg-blue-900 py-4 mt-12">
-        <div class="container mx-auto text-center text-sm text-gray-400">
-            <p>Copyright &copy; 2025 Julian Weinelt. All rights reserved.</p>
-            <p>Imprint | Privacy | ToS</p>
+
+        <!-- Security Section -->
+        <div id="section-security" class="settings-section hidden">
+            <h2 class="text-2xl font-semibold mb-6">Security</h2>
+
+            <!-- Passwort ändern -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-200">Change password</h3>
+                <div class="space-y-4">
+                    <input type="password" id="newPassword" placeholder="New password"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="repeatPassword" placeholder="Repeat password"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Save password</button>
+                </div>
+            </div>
+
+            <!-- 2FA Optionen -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-200">Two-factor-authentification (2FA)</h3>
+                <div class="space-y-3">
+                    <button class="bg-green-600 px-4 py-2 rounded hover:bg-green-700 transition w-full text-left">Add device</button>
+                    <button class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition w-full text-left">Remove device</button>
+                    <button class="bg-yellow-600 px-4 py-2 rounded hover:bg-yellow-700 transition w-full text-left">Display backup codes</button>
+                </div>
+            </div>
+
+            <!-- Social Logins -->
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-gray-200">Linked accounts</h3>
+                <p class="text-gray-400 mb-4">Here you can manage your linked third-party accounts like Discord, GitHub, ...</p>
+
+                <div id="linkedAccounts" class="space-y-2 mb-4">
+                    <!-- Beispielhafter Eintrag -->
+                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                        <span class="font-medium">GitHub</span>
+                        <button class="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm">Remove</button>
+                    </div>
+                </div>
+
+                <button class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">Link account</button>
+            </div>
         </div>
-    </footer>
 
 
-    <script src="/main.js"></script>
-    <script src="/cookies.js"></script>
-    <script src="account.js"></script>
+        <!-- Account Section -->
+        <div id="section-account" class="settings-section hidden">
+            <h2 class="text-2xl font-semibold mb-6">Account</h2>
+
+            <!-- Persönliche Daten anfordern -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-3 text-gray-200">Data information</h3>
+                <p class="text-gray-400 mb-4">
+                    You can request a full copy of your stored data.
+                    This will be sent to you via email as soon as it is available.
+                </p>
+                <button class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">
+                    Request full data report
+                </button>
+            </div>
+
+            <!-- Account deaktivieren -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-3 text-gray-200">Account Deactivation</h3>
+                <p class="text-gray-400 mb-4">
+                    If you want to temporarily deactivate your account, you can deactivate it.
+                    You can reactivate it at any time later. Plugins will be kept.
+                </p>
+                <button id="deactivateAccountBtn" class="bg-yellow-600 px-4 py-2 rounded hover:bg-yellow-700 transition">
+                    Deactivate account
+                </button>
+                <button id="reactivateAccountBtn" class="hidden bg-green-600 px-4 py-2 rounded hover:bg-green-700 transition">
+                    Activate account
+                </button>
+            </div>
+
+            <!-- Account löschen -->
+            <div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-200">Account Deletion</h3>
+                <p class="text-gray-400 mb-4">
+                    If you would like to delete your account completely, you can submit a deletion request.
+                    After confirmation, your account will be permanently deleted.
+                    Your plugins will be removed from the marketplace and any comments anonymized.
+                </p>
+                <button class="bg-red-700 px-4 py-2 rounded hover:bg-red-800 transition">
+                    Request deletion
+                </button>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="bg-blue-900 py-4 mt-12">
+    <div class="container mx-auto text-center text-sm text-gray-400">
+        <p>Copyright &copy; 2025 Julian Weinelt. All rights reserved.</p>
+        <p>Imprint | Privacy | ToS</p>
+    </div>
+</footer>
+
+<script>
+    function showSection(id) {
+        document.querySelectorAll('.settings-section').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`section-${id}`).classList.remove('hidden');
+    }
+
+    async function handleUpload() {
+        const input = document.getElementById('profilePicInput');
+        if (input.files.length === 0) {
+            alert("Bitte eine Datei auswählen.");
+            return;
+        }
+
+        const file = input.files[0];
+        await uploadProfilePicture(file);
+    }
+</script>
+
+<script src="/cookies.js"></script>
+<script src="account.js"></script>
 </body>
 </html>
