@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Plugin - Caesar Plugin Marketplace</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../style.css" rel="stylesheet">
+    <link href="/img/market_place.png" rel="icon">
+    <script src="https://kit.fontawesome.com/85182ea83e.js" crossorigin="anonymous"></script>
+    <script src="../main-vars.js"></script>
+</head>
+
+<body class="bg-gray-900 text-white font-sans">
+<!-- Header -->
+<header class="bg-blue-900 shadow-md py-4">
+    <div class="container mx-auto flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold text-white">Caesar Plugin Marketplace</a>
+        <nav>
+            <ul class="flex space-x-6">
+                <li><a href="/" class="hover:text-blue-400">Home</a></li>
+                <li><a href="/about" class="hover:text-blue-400">About</a></li>
+                <li><a href="/plugins" class="hover:text-blue-400">Plugins</a></li>
+                <li id="submit-resource" class="hidden"><a href="/upload" class="hover:text-blue-400">Submit Resource</a></li>
+                <li><a id="login-button" href="/login" class="hover:text-blue-400">Login</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<!-- Main Layout -->
+<main class="container mx-auto py-12 flex flex-col md:flex-row gap-8">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-1/4 bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
+        <h2 class="text-xl font-semibold mb-6 text-blue-400">Manage your Plugin</h2>
+        <nav class="flex flex-col space-y-3">
+            <button id="plugin-section-button" onclick="showSection('plugin-section')"
+                    class="text-left px-4 py-2 bg-blue-700 rounded hover:bg-blue-600 transition">Plugin</button>
+            <button id="versions-section-button" onclick="showSection('versions-section')"
+                    class="text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">Versions</button>
+            <!-- TODO: Analytics-->
+        </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="w-full md:w-3/4 bg-gray-800 p-8 rounded-lg shadow-lg">
+
+        <!-- Plugin Section -->
+        <section id="plugin-section" class="fade-in">
+            <div id="popup" class="w-full bg-yellow-500 rounded-lg p-8 shadow-lg">
+                <h3 id="popup-title" class="text-xl font-bold">Information!</h3>
+                <p id="popup-text">Your plugin hasn't been approved by the moderator team, yet. Until then, it's not publicly available
+                 on the market place.</p>
+            </div>
+            <h2 class="text-2xl font-semibold text-blue-400 mb-6">Edit plugin</h2>
+            <div class="space-y-6">
+
+                <div>
+                    <label class="block mb-2 text-gray-300">Plugin name</label>
+                    <input type="text" id="pluginName" disabled placeholder="Enter plugin name"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-gray-300">Short description</label>
+                    <input type="text" id="shortDesc" placeholder="Describe your plugin in just 2 sentences"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-gray-300 smoothie">Long description</label>
+                    <textarea id="longDesc" rows="6" placeholder="Full description of your plugin (markdown supported)"
+                              class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-gray-300">License</label>
+                    <select id="licenseSelect" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                        <option value="MIT">MIT</option>
+                        <option value="GPL-3.0">GNU GPL 3.0</option>
+                        <option value="GPL-3.0">GNU GPL 2.0</option>
+                        <option value="Apache-2.0">Apache 2.0</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-gray-300">Main picture</label>
+                    <input type="file" id="profileImage" class="w-full text-gray-300">
+                    <img id="pl-logo" class="w-16">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-gray-300">Screenshots and showcase images (up to 5)</label>
+                    <input type="file" id="screenshots" multiple class="w-full text-gray-300">
+
+
+                    <div id="gallery" class="relative w-full" data-carousel="slide">
+                        <!-- Carousel wrapper -->
+                        <div id="screenshots-gal" class="relative h-45 overflow-hidden rounded-lg md:h-96">
+
+                        </div>
+                        <!-- Slider controls -->
+                        <button type="button" class="absolute top-0 start-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none" data-carousel-prev>
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+                            <svg class="w-4 h-4 text-white dark:text-gray-800 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4"/>
+                            </svg>
+                            <span class="sr-only">Previous</span>
+                        </span>
+                                        </button>
+                                        <button type="button" class="absolute top-0 end-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none" data-carousel-next>
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+                            <svg class="w-4 h-4 text-white dark:text-gray-800 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                            </svg>
+                            <span class="sr-only">Next</span>
+                        </span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-gray-300">External links</label>
+                    <input type="url" id="githubLink" placeholder="Source code"
+                           class="w-full px-4 py-2 mb-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                    <input type="url" id="wikiLink" placeholder="Wiki"
+                           class="w-full px-4 py-2 mb-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                    <input type="url" id="sponsorLink" placeholder="Sponsoring"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="flex justify-end">
+                    <button class="bg-blue-600 px-6 py-2 rounded hover:bg-blue-700 transition">Save changes</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Versions Section -->
+        <section id="versions-section" class="hidden fade-in">
+            <h2 class="text-2xl font-semibold text-blue-400 mb-6">Manage versions</h2>
+
+            <!-- Neuerstellung -->
+            <button onclick="toggleNewVersionForm()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-6">Make a new release</button>
+
+            <div id="newVersionForm" class="hidden fade-in bg-gray-700 p-6 rounded-lg mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-200">Add a new version</h3>
+                <div class="space-y-4">
+                    <input type="text" id="versionNumber" placeholder="Version number (only semantic versioning)"
+                           class="w-200 px-4 py-2 bg-gray-800 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
+                    <textarea id="versionChangelog" rows="4" placeholder="What has been changed in this update?"
+                              class="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500"></textarea>
+
+                    <div class="flex">
+                        <label class="flex items-center space-x-3 cursor-pointer select-none mr-6">
+                            <input type="checkbox" class="glow-checkbox" value="false" id="mark-breaking-change">
+                            <span class="text-gray-300">Mark this release as breaking change</span>
+                        </label>
+                        <input type="text" id="breaking-change" placeholder="What's affected? (e.g. breaking change to config)"
+                               class="w-128 px-4 py-2 bg-gray-800 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500 fade-in hidden">
+                    </div>
+
+
+                    <div class="flex items-center justify-center w-full">
+                        <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-700 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-600 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">JAR, ZIP. Max 8MB</p>
+                            </div>
+                            <input id="dropzone-file" type="file" class="hidden" accept="application/zip,.jar,.cplugin"/>
+                        </label>
+                    </div>
+
+
+                    <div class="flex justify-end">
+                        <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Upload</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste vorhandener Versionen -->
+            <h3 class="text-xl font-semibold mb-4 text-gray-200">Versions</h3>
+            <div id="versionsList" class="space-y-3">
+                <!-- Beispielhafte Version -->
+                <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                    <div>
+                        <span class="font-semibold text-blue-400">v1.2.3</span>
+                        <p class="text-sm text-gray-400">Published at: 1.1.1111</p>
+                    </div>
+                    <div class="space-x-2">
+                        <button class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm">Changelog</button>
+                        <button class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-blue-900 py-4 mt-12">
+    <div class="container mx-auto text-center text-sm text-gray-400">
+        <p>Copyright &copy; 2025 Julian Weinelt. All rights reserved.</p>
+        <p>Imprint | Privacy | Terms of service</p>
+    </div>
+</footer>
+
+<script src="../cookies.js"></script>
+<script src="../main.js"></script>
+<script src="index.js"></script>
+</body>
+</html>
