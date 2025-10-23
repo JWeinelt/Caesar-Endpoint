@@ -31,7 +31,7 @@ public class Configuration {
         private String smtpHost = "mail.caesarnet.cloud";
         private int port = 587;
         private String username = "info@caesarnet.cloud";
-        private String password = "kKEqCXv2k4KSTPR";
+        private String password = "";
         private String senderName = "Caesar Marketplace";
 
     }
