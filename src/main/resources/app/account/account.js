@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-
-    
+    if (getCookie("token") != null && getCookie("token") !== '') {
+        document.getElementById("login-button").textContent = "Logout";
+        document.getElementById("login-button").href = "/logout";
+        document.getElementById("submit-resource").classList.remove("hidden");
+    }
 });
-
 
 async function uploadProfilePicture(file, userId = null) {
     const formData = new FormData();
