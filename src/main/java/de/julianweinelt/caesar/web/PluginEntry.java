@@ -26,6 +26,9 @@ public class PluginEntry {
     private Date dateCreated;
     private float rating;
     private UUID[] screenshots;
+    private PluginState state;
+
+    private boolean waitingForAppoval = true;
 
     public PluginEntry(UUID uniqueId, String name, String version,
                        String author, String description, String descriptionLong,
