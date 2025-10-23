@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("follow").classList.add("hidden");
     }
 
-    fetch(`http://${ADDRESS}/api/market/profile/me`, {
+    fetch(`http://${ADDRESS}/api/market/profile/${urlParams.get("user")}`, {
         method: "GET",
 
         headers: {
@@ -43,25 +43,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function check_verify(isVerified) {
     if (isVerified) {
-            verificationStatus.textContent = "Verified";
+            verificationStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Verified`;
             verificationStatus.classList.remove('text-blue-500');
             verificationStatus.classList.add('text-green-500');
     }
 }
 
 function display(data) {
-        check_verify(data.verified);
-        document.getElementById('pname').textContent = data.username;
-        document.getElementById('ptitle').textContent = data.ptitle;
-        document.getElementById('pplfo').textContent = data.pplfo;
-        document.getElementById('memsince').textContent = 'Member since ' + formatUnixTimestamp(data.created);
-        document.getElementById('last-activity').textContent = 'Last Activity ' + formatUnixTimestamp(data.created);
-        document.getElementById('pdesc1').textContent = data.description;
-        document.getElementById('avatar').src = `http://${ADDRESS}/api/image/` + data.ID;
+        check_verify(data.user.verified);
+        document.getElementById('pname').textContent = data.user.userName;
+        document.getElementById('ptitle').textContent = "Developer";
+        document.getElementById('pplfo').textContent = `${data.plugins.length} Plugins • ${data.followers} Followers`;
+        document.getElementById('memsince').textContent = 'Member since ' + formatUnixTimestamp(data.user.created);
+        document.getElementById('last-activity').textContent = 'Last Activity ' + formatUnixTimestamp(data.user.lastOnline);
+        document.getElementById('pdesc1').textContent = data.user.description;
+        document.getElementById('avatar').src = `http://${ADDRESS}/api/image/` + data.user.uniqueID;
     //pl-hist
 }
 
-function formatUnixTimestamp(unixTimestamp, locale = 'de-DE', options = {}) {
+function formatUnixTimestamp(unixTimestamp, locale = 'en-US', options = {}) {
     if (unixTimestamp.toString().length === 10) {
         unixTimestamp *= 1000;
     }
