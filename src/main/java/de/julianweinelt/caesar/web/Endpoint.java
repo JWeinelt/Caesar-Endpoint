@@ -7,6 +7,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.julianweinelt.caesar.api.FileManager;
 import de.julianweinelt.caesar.storage.MySQL;
+import de.julianweinelt.caesar.storage.data.AccountStatus;
+import de.julianweinelt.caesar.storage.data.PluginManager;
+import de.julianweinelt.caesar.storage.data.User;
+import de.julianweinelt.caesar.storage.data.UserManager;
+import de.julianweinelt.caesar.web.mail.EMailUtil;
+import de.julianweinelt.caesar.web.mail.EmailTemplateProvider;
 import io.javalin.Javalin;
 import io.javalin.config.MultipartConfig;
 import io.javalin.config.SizeUnit;
@@ -115,7 +121,11 @@ public class Endpoint {
                     if (user.equalsIgnoreCase("me")) {
                         uuid = getUserIDFromToken(ctx);
                     } else {
-                        uuid = UUID.fromString(ctx.pathParam("name"));
+                        try {
+                            uuid = UUID.fromString(ctx.pathParam("name"));
+                        } catch (IllegalArgumentException e) {
+                            uuid = UserManager.getInstance().getUserByName(ctx.pathParam("name")).getUniqueID();
+                        }
                     }
 
                     ctx.result(MySQL.getInstance().getProfile(uuid).toString());
@@ -124,7 +134,6 @@ public class Endpoint {
                 .get("/api/image/{id}", ctx -> {
                     String typeI = (ctx.queryParam("type") == null) ? "profile" : ctx.queryParam("type");
                     UUID imageID = UUID.fromString(ctx.pathParam("id"));
-                    log.info(imageID.toString());
                     String type = MySQL.getInstance().getImageType(imageID);
                     if (type == null) {
                         ctx.status(401);
@@ -179,22 +188,25 @@ public class Endpoint {
 
                     String name = ctx.queryParam("name") != null ? ctx.queryParam("name") : null;
                     if (name == null) {
-                        ctx.result(GSON.toJson(MySQL.getInstance().getPlugins())).status(200);
+                        ctx.result(GSON.toJson(PluginManager.getInstance().getPlugins())).status(200);
                         return;
                     }
-                    UUID uuid = MySQL.getInstance().getPluginID(name);
-                    if (uuid == null) {
-                        ctx.status(404);
-                        ctx.result("Plugin not found");
-                        return;
+                    UUID id;
+                    try {
+                        id = UUID.fromString(name);
+                    } catch (IllegalArgumentException e) {
+                        id = null;
                     }
-                    PluginEntry entry = MySQL.getInstance().getPlugin(uuid);
+                    PluginEntry entry = id == null ? PluginManager.getInstance().getPlugin(name) :
+                            PluginManager.getInstance().getPlugin(id);
                     if (entry == null) {
                         ctx.status(404);
                         ctx.result("Plugin not found");
                         return;
                     }
-                    ctx.result(GSON.toJson(entry));
+                    JsonObject o = new JsonObject();
+                    o.add("plugin", GSON.toJsonTree(entry));
+                    ctx.result(o.toString());
                     ctx.status(200);
                 })
                 .get("/api/market/plugin/comment", ctx -> {
@@ -292,8 +304,45 @@ public class Endpoint {
                     entry.setWikiLink(wiki);
                     entry.setSponsorLink(sponsor);
                     entry.setSourceCode(github);
-                    MySQL.getInstance().importPlugin(entry);
+                    entry.setState(PluginState.REQUESTED);
+                    PluginManager.getInstance().createPlugin(entry);
                     ctx.result(createSuccessResponse());
+                })
+                .post("/api/market/plugin/edit", ctx -> {
+                    JsonObject root = JsonParser.parseString(ctx.body()).getAsJsonObject();
+                    UUID pluginID = UUID.fromString(root.get("pluginID").getAsString());
+                    PluginEntry entry = PluginManager.getInstance().getPlugin(pluginID);
+                    if (entry == null) {
+                        ctx.result(createErrorResponse(ErrorType.PLUGIN_NOT_FOUND)).status(HttpStatus.BAD_REQUEST);
+                        return;
+                    }
+                    if (root.has("gitHubLink")) entry.setSourceCode(root.get("gitHubLink").getAsString());
+                    if (root.has("sponsorLink")) entry.setSponsorLink(root.get("sponsorLink").getAsString());
+                    if (root.has("wikiLink")) entry.setWikiLink(root.get("wikiLink").getAsString());
+                    if (root.has("descLong")) entry.setDescriptionLong(root.get("descLong").getAsString());
+                    if (root.has("descShort")) entry.setDescription(root.get("descShort").getAsString());
+                    if (root.has("license")) entry.setLicense(root.get("license").getAsString());
+
+                    MySQL.getInstance().updatePlugin(entry);
+                    ctx.result(createSuccessResponse()).status(HttpStatus.CREATED);
+                })
+                .post("/api/market/plugin/state", ctx -> {
+                    JsonObject root = JsonParser.parseString(ctx.body()).getAsJsonObject();
+                    UUID userID = getUserIDFromToken(ctx);
+                    User u = UserManager.getInstance().getUserByUUID(userID);
+                    if (!u.hasPermission("admin")) {
+                        ctx.status(HttpStatus.FORBIDDEN).result(createErrorResponse(ErrorType.NO_PERMISSION));
+                        return;
+                    }
+                    try {
+                        PluginState state = PluginState.valueOf(root.get("state").getAsString().toUpperCase());
+                        UUID pluginID = UUID.fromString(root.get("pluginID").getAsString());
+                        PluginManager.getInstance().updatePluginState(pluginID, state);
+                        ctx.result(createSuccessResponse());
+                        ctx.status(HttpStatus.OK);
+                    } catch (IllegalArgumentException ignored) {
+                        ctx.status(HttpStatus.BAD_REQUEST).result(createErrorResponse(ErrorType.INVALID_BODY));
+                    }
                 })
                 .put("/api/market/plugin/upload/{id}/{version}", ctx -> {
                     UUID pluginID = UUID.fromString(ctx.pathParam("id"));
@@ -317,13 +366,15 @@ public class Endpoint {
                     JsonObject body = JsonParser.parseString(ctx.body()).getAsJsonObject();
                     log.info(body.toString());
                     String eMail = body.get("email").getAsString();
-                    if (MySQL.getInstance().getAccount(eMail) != null) {
+                    if (UserManager.getInstance().getUserByEmail(eMail) != null) {
                         ctx.status(401).result(createErrorResponse(ErrorType.USER_ALREADY_EXISTS));
                         return;
                     }
                     String password = body.get("password").getAsString();
                     String userName = body.get("username").getAsString();
-                    UUID uuid = MySQL.getInstance().createAccount(eMail, password, userName);
+                    UUID uuid = UserManager.getInstance().createUser(eMail, password, userName);
+                    String confirmID = UUID.randomUUID() + "-" + UUID.randomUUID();
+                    UserManager.getInstance().getWaitForConfirmAccounts().put(uuid, confirmID);
                     if (uuid == null) {
                         ctx.status(400);
                     } else {
@@ -333,12 +384,26 @@ public class Endpoint {
                         Files.copy(new File("./app/img/account_profile_placeholder.png").toPath(), destination.toPath());
                         MySQL.getInstance().setImageType(uuid, "image/png");
 
+                        EMailUtil.getInstance().sendEmail(eMail, "Confirm your eMail address",
+                                EmailTemplateProvider.welcomeMessage(userName, uuid, confirmID));
+
                         JsonObject o = new JsonObject();
                         o.addProperty("success", true);
                         o.addProperty("uuid", uuid.toString());
                         o.addProperty("token", JWTUtil.token(uuid));
                         ctx.result(o.toString());
                     }
+                })
+                .post("/api/market/user/confirm", ctx -> {
+                    JsonObject root = JsonParser.parseString(ctx.body()).getAsJsonObject();
+                    String confirmID = root.get("confirmID").getAsString();
+                    UUID account = UUID.fromString(root.get("account").getAsString());
+                    if (confirmID.equals(UserManager.getInstance().getWaitForConfirmAccounts().getOrDefault(account, ""))) {
+                        UserManager.getInstance().getWaitForConfirmAccounts().remove(account);
+                        UserManager.getInstance().getUserByUUID(account).setAccountStatus(
+                                AccountStatus.getStatus(UUID.fromString("8a2a721f-b017-11f0-a242-bc2411718ef7")));
+                        ctx.status(200).result(createSuccessResponse());
+                    } else ctx.status(404);
                 })
                 .post("/api/market/user/login", ctx -> {
 
@@ -355,26 +420,28 @@ public class Endpoint {
                     String eMail = decodedString.split(":")[0];
                     String password = decodedString.split(":")[1];
 
-                    JsonObject o = MySQL.getInstance().getAccount(eMail);
-                    if (o == null) {
+                    User u = UserManager.getInstance().getUserByEmail(eMail);
+                    if (u == null) {
                         ctx.result(createErrorResponse(ErrorType.USER_NOT_FOUND));
                         ctx.status(HttpStatus.UNAUTHORIZED); // 401
                         return;
                     }
-                    /*if (!user.isActive()) {
-                        ctx.result(createErrorResponse(ErrorType.USER_DISABLED));
-                        ctx.status(HttpStatus.UNAUTHORIZED); // 401
-                        return;
-                    }*/
-                    if (!Objects.equals(o.get("password").getAsString(), decodedString.split(":")[1])) {
+                    if (!Objects.equals(u.getPassword(), password)) {
                         ctx.result(createErrorResponse(ErrorType.PASSWORD_INVALID));
                         ctx.status(HttpStatus.UNAUTHORIZED); // 401
+                        return;
+                    }
+                    if (!u.getAccountStatus().equals(AccountStatus.byName("Active"))) {
+                        ctx.status(HttpStatus.UNAUTHORIZED); // 401
+                        ctx.result(createErrorResponse(ErrorType.USER_DISABLED));
                         return;
                     }
 
                     JsonObject response = new JsonObject();
                     response.addProperty("success", true);
-                    response.addProperty("token", JWTUtil.token(UUID.fromString(o.get("ID").getAsString())));
+                    response.addProperty("token", JWTUtil.token(u.getUniqueID()));
+                    response.addProperty("username", u.getUserName());
+                    response.addProperty("userID", u.getUniqueID().toString());
                     ctx.result(response.toString());
                 })
 
@@ -475,8 +542,10 @@ public class Endpoint {
         USER_ALREADY_EXISTS,
         USER_DISABLED,
         INVALID_HEADER,
+        INVALID_BODY,
         INVALID_SETUP_CODE,
         NO_PERMISSION,
-        INTERNAL_ERROR
+        INTERNAL_ERROR,
+        PLUGIN_NOT_FOUND
     }
 }
