@@ -23,6 +23,19 @@ public class Configuration {
     private final HashMap<String, String> discordChannels = new HashMap<>();
     private String discordGuild = "";
 
+    private MailConfiguration mailConfiguration = new MailConfiguration();
+
+
+    @Getter @Setter
+    public static class MailConfiguration {
+        private String smtpHost = "mail.caesarnet.cloud";
+        private int port = 587;
+        private String username = "info@caesarnet.cloud";
+        private String password = "kKEqCXv2k4KSTPR";
+        private String senderName = "Caesar Marketplace";
+
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Configuration c) {
