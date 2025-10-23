@@ -166,3 +166,35 @@ CREATE TABLE IF NOT EXISTS plugin_comments (
 ALTER TABLE plugin_comments
     ADD FOREIGN KEY (PluginID) REFERENCES plugin_entries(uuid),
     ADD FOREIGN KEY (AuthorID) REFERENCES accounts(AccountID);
+
+/*--------------------------------*/
+
+CREATE TABLE IF NOT EXISTS accounts_awaiting_u_confirm (
+    AccountID varchar(36) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS plugins_awaiting_approval (
+    PluginID varchar(36) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    UserID varchar(36) NOT NULL,
+    Action varchar(36) NOT NULL,
+    OldValue text,
+    NewValue text,
+    CreationDate bigint
+);
+
+CREATE TABLE IF NOT EXISTS account_permissions (
+    AccountID varchar(36) NOT NULL PRIMARY KEY,
+    PermissionName text NOT NULL
+);
+
+INSERT INTO account_status (StatusID, StatusName, Active) VALUES
+                                                              (UUID(), 'Created', 1),
+                                                              (UUID(), 'Active', 1),
+                                                              (UUID(), 'Banned', 1),
+                                                              (UUID(), 'Deleted', 1);
+
+ALTER TABLE plugin_entries
+    ADD COLUMN State enum('REQUESTED', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'REQUESTED';
