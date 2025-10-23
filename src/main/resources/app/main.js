@@ -1,33 +1,55 @@
 var plugin_data = {}
 
+const intervalID = setInterval(() => {
+    console.log("%cSTOP!", "color: red; font-size: 60px; font-weight: bold; text-shadow: 2px 2px 8px black;");
+    console.log("%cThis console is intended for developers only.\nIf someone told you to copy and paste something here," +
+        " STOP immediately.\nIt may give attackers access to your account or your data.", "color: white; background-color:" +
+        " red; font-size: 16px; border-radius: 4px;");
+}, 1000);
+setTimeout(() => clearInterval(intervalID), 5000);
+
 document.addEventListener('DOMContentLoaded', function() {
     if (getCookie("token") != null && getCookie("token") !== '') {
-        document.getElementById("login-button").textContent = "Your Account";
+        document.getElementById("login-button").textContent = "Your Profile";
         document.getElementById("login-button").href = "/dev-profile?user=me";
         document.getElementById("submit-resource").classList.remove("hidden");
     }
 });
 
-fetch(`http://${ADDRESS}/api/market/plugin`, {
-    method: "GET",
+document.querySelectorAll("header").forEach(e => {
+    e.classList.remove("bg-blue-900");
+    e.classList.add("bg-gray-800");
+});
 
-    headers: {
-        'Authorization': 'Bearer ' + getCookie('token'),
-        'Content-Type': 'application/json',
-    }
-})
-    .then(response => response.json())
-    .then(data => {
-        plugin_data = data;
-        for (let i in data) {
-            displayPluginMostDownloads(data[i]);
-            displayPluginNewest(data[i]);
-            console.log(data[i]);
+document.querySelectorAll("footer").forEach(e => {
+    e.classList.remove("bg-blue-900");
+    e.classList.add("bg-gray-800");
+});
+
+
+function getData() {
+    fetch(`http://${ADDRESS}/api/market/plugin`, {
+        method: "GET",
+
+        headers: {
+            'Authorization': 'Bearer ' + getCookie('token'),
+            'Content-Type': 'application/json',
         }
     })
-    .catch(error => {
-        console.error('Fehler:', error);
-    });
+        .then(response => response.json())
+        .then(data => {
+            plugin_data = data;
+            for (let i in data) {
+                if (data[i].state !== "APPROVED") continue;
+                displayPluginMostDownloads(data[i]);
+                displayPluginNewest(data[i]);
+                console.log(data[i]);
+            }
+        })
+        .catch(error => {
+            console.error('Fehler:', error);
+        });
+}
 
 
 function displayPluginMostDownloads(pdata) {
@@ -73,8 +95,7 @@ async function hashSHA256(text) {
     const data = encoder.encode(text);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function gotoForum() {
