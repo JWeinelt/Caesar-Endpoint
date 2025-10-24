@@ -268,3 +268,35 @@ CREATE TABLE IF NOT EXISTS mc_plugin_rating (
     INDEX (ServerSoftware),
     INDEX (OperatingSystem)
 );
+
+CREATE VIEW IF NOT EXISTS 'mc_plugin_platform_ids' AS
+    SELECT p.PluginID, Name,
+           CASE WHEN s.Source = 'SPIGOT' THEN s.ResourceID ELSE NULL END AS SpigotID,
+           CASE WHEN s.Source = 'MODRINTH' THEN s.ResourceID ELSE NULL END AS ModRinthID,
+           CASE WHEN s.Source = 'HANGAR' THEN s.ResourceID ELSE NULL END AS HangarID
+    FROM mc_plugins AS p LEFT JOIN mc_plugin_sources AS s ON s.PluginID = p.PluginID;
+
+CREATE VIEW IF NOT EXISTS 'mc_plugin_rating_group' AS
+    SELECT r.PluginID, r.VersionName, r.OperatingSystem, r.ServerSoftware, r.MinecraftVersion, AVG(r.Rating)
+    FROM mc_plugin_rating AS r
+GROUP BY r.PluginID, r.VersionName, r.OperatingSystem, r.ServerSoftware, r.MinecraftVersion;
+
+CREATE VIEW IF NOT EXISTS 'mc_plugin_statuses' AS
+    SELECT PluginID,
+           SUM(CASE WHEN StatusDetail = 'CRASHING' THEN 1 ELSE 0 END) AS TimesCrashing,
+           SUM(CASE WHEN StatusDetail = 'PERFORMANCE' THEN 1 ELSE 0 END) AS TimesPerformance,
+           SUM(CASE WHEN StatusDetail = 'BUGS' THEN 1 ELSE 0 END) AS TimesBugs,
+           SUM(CASE WHEN StatusDetail = 'RUNNING' THEN 1 ELSE 0 END) AS TimesRunning,
+           COUNT(StatusDetail) AS TimesRecorded
+    FROM mc_plugin_rating;
+
+CREATE VIEW IF NOT EXISTS 'mc_plugin_operating_systems' AS
+    SELECT PluginID, VersionName, OperatingSystem, COUNT(OperatingSystem) AS Amount
+    FROM mc_plugin_rating
+    GROUP BY PluginID, VersionName, OperatingSystem;
+
+CREATE VIEW IF NOT EXISTS 'mc_plugin_server_softwares' AS
+    SELECT PluginID, VersionName, ServerSoftware, COUNT(ServerSoftware) AS Amount
+    FROM mc_plugin_rating
+    GROUP BY PluginID, VersionName, ServerSoftware;
+
