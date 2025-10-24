@@ -201,3 +201,70 @@ ALTER TABLE plugin_entries
 
 /*-------------------------------------*/
 
+CREATE TABLE IF NOT EXISTS mc_plugins (
+    PluginID char(36) NOT NULL PRIMARY KEY,
+    Name varchar(100) NOT NULL,
+    Status enum('REQUESTED', 'APPROVED'),
+    Author varchar(100) NOT NULL,
+    INDEX (Author),
+    INDEX (Name),
+    INDEX (Status)
+);
+
+CREATE TABLE IF NOT EXISTS mc_plugin_sources (
+     PluginID CHAR(36) NOT NULL,
+     Source ENUM('SPIGOT', 'MODRINTH', 'HANGAR') NOT NULL,
+     ResourceID VARCHAR(50) NOT NULL,
+     PRIMARY KEY (PluginID, Source),
+     FOREIGN KEY (PluginID) REFERENCES mc_plugins (PluginID),
+     INDEX(ResourceID)
+);
+
+CREATE TABLE IF NOT EXISTS mc_server_software (
+    SoftwareID char(36) NOT NULL PRIMARY KEY,
+    Name varchar(100) NOT NULL,
+    ForkOf char(36) NULL,
+    API enum('BUKKIT', 'NUKKIT', 'WATERDOG', 'MINESTOM', 'FORGE', 'NEOFORGE', 'FABRIC', 'BUNGEECORD', 'VELOCITY', 'CUSTOM'),
+    Legacy tinyint NOT NULL DEFAULT 0,
+    Experimental tinyint NOT NULL DEFAULT 0,
+    BedrockEdition tinyint NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS mc_operating_system (
+    SystemID char(36) NOT NULL PRIMARY KEY,
+    Name varchar(100) NOT NULL,
+    VersionName varchar(30) NULL,
+    NumericalVersion int NULL,
+    Architecture enum('WINDOWS', 'LINUX', 'MACOS', 'BSD', 'UNKNOWN'),
+    Legacy tinyint NOT NULL DEFAULT 0,
+    Experimental tinyint NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS mc_version (
+    VersionID char(36) NOT NULL PRIMARY KEY,
+    VersionName varchar(50) NOT NULL,
+    UpdateName varchar(100) NULL,
+    ReleaseDate bigint NOT NULL,
+    Supported tinyint NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS mc_plugin_rating (
+    PluginID char(36) NOT NULL,
+    VersionName varchar(100) NOT NULL,
+    OperatingSystem char(36) NULL,
+    MinecraftVersion char(36) NOT NULL,
+    ServerSoftware char(36) NOT NULL,
+    ServerSoftwareAdditionalInfo varchar(300) NULL,
+    InstalledPlugins text NULL, /* Syntax: <pl-id>:<versionString>;... */
+    Rating float NOT NULL,
+    StatusDetail enum('CRASHING', 'BUGS', 'PERFORMANCE', 'RUNNING'),
+    FOREIGN KEY (PluginID) REFERENCES mc_plugins(PluginID),
+    FOREIGN KEY (OperatingSystem) REFERENCES mc_operating_system (SystemID),
+    FOREIGN KEY (MinecraftVersion) REFERENCES mc_version (VersionID),
+    FOREIGN KEY (ServerSoftware) REFERENCES mc_server_software (SoftwareID),
+    INDEX (PluginID),
+    INDEX (PluginID, VersionName),
+    INDEX (MinecraftVersion),
+    INDEX (ServerSoftware),
+    INDEX (OperatingSystem)
+);
