@@ -44,8 +44,8 @@ public class PluginManager {
         return null;
     }
 
-    public void updatePluginState(UUID plugin, PluginState state) {
+    public boolean updatePluginState(UUID plugin, PluginState state) {
         getPlugin(plugin).setState(state);
-        MySQL.getInstance().updatePluginState(plugin, state);
+        return MySQL.getInstance().updatePluginState(plugin, state) != 0;
     }
 }

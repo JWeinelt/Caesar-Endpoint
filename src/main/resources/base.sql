@@ -198,3 +198,6 @@ INSERT INTO account_status (StatusID, StatusName, Active) VALUES
 
 ALTER TABLE plugin_entries
     ADD COLUMN State enum('REQUESTED', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'REQUESTED';
+
+/*-------------------------------------*/
+

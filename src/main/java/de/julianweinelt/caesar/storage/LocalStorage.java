@@ -15,7 +15,6 @@ public class LocalStorage {
 
 
     private final File configFile = new File("config.json");
-    private final File connectionFile = new File("data/connections.json");
 
     @Getter
     private Configuration data = new Configuration();
@@ -37,23 +36,8 @@ public class LocalStorage {
             }
             data = GSON.fromJson(jsonStringBuilder.toString(), new TypeToken<Configuration>(){}.getType());
         } catch (IOException e) {
-            log.error(e.getMessage());
+            log.error("Failed to load local storage.", e);
         }
-    }
-    public Configuration loadDataTemp() {
-        log.info("Loading local storage from disk...");
-        if (!configFile.exists()) saveData();
-        try (BufferedReader br = new BufferedReader(new FileReader(configFile))) {
-            StringBuilder jsonStringBuilder = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                jsonStringBuilder.append(line);
-            }
-            return GSON.fromJson(jsonStringBuilder.toString(), new TypeToken<Configuration>(){}.getType());
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-        return new Configuration();
     }
 
 
@@ -61,7 +45,7 @@ public class LocalStorage {
         try (FileWriter writer = new FileWriter(configFile)) {
             writer.write(GSON.toJson(data));
         } catch (IOException e) {
-            log.error("Failed to save object: " + e.getMessage());
+            log.error("Failed to save object: {}", e.getMessage(), e);
         }
         log.info("Local storage saved.");
     }

@@ -49,12 +49,14 @@ public class MySQL {
             conn = DriverManager.getConnection(URL, USER, PASSWORD);
             log.info("Connected to MySQL database: {}", URL);
             conn.createStatement().execute("USE " + data.getDatabaseName());
+            log.info("Using {} as a database.", data.getDatabaseName());
             PluginManager.getInstance().getData();
             UserManager.getInstance().getData();
             getAccountStatuses();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             log.error("Failed to connect to MySQL database: {}", e.getMessage());
-            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            log.error("Could not load MySQL driver: {}", e.getMessage());
         }
     }
 
@@ -129,7 +131,7 @@ public class MySQL {
                 permissions.computeIfAbsent(u, list -> new ArrayList<>()).add(set.getString(1));
             }
         } catch (SQLException e) {
-            log.error("Failed to get user permissions: " + e.getMessage());
+            log.error("Failed to get user permissions: {}", e.getMessage());
         }
         return permissions;
     }
@@ -369,33 +371,6 @@ public class MySQL {
             return uuid;
         } catch (SQLException e) {
             log.error("Failed to create account: {}", e.getMessage());
-        }
-        return null;
-    }
-
-    public User getAccountUser(UUID id) {
-        checkConnection();
-
-        try (PreparedStatement pS = conn.prepareStatement("SELECT AccountID, UserName, IsVerified, " +
-                "AccountStatus, AccountCreated, eMail, PasswordHashed, Description, LastOnline FROM accounts WHERE AccountID = ?")) {
-            pS.setString(1, id.toString());
-            ResultSet set = pS.executeQuery();
-            if (set.next()) {
-                User u = new User(
-                        set.getString(2),
-                        set.getString(7),
-                        set.getString(6),
-                        id,
-                        set.getString(8),
-                        set.getBoolean(3),
-                        AccountStatus.getStatus(UUID.fromString(set.getString(4))),
-                        set.getLong(5),
-                        set.getLong(9)
-                );
-                UserManager.getInstance().addUserInternal(u);
-            }
-        } catch (SQLException e) {
-            log.error("Failed to get account by id: {}", e.getMessage());
         }
         return null;
     }

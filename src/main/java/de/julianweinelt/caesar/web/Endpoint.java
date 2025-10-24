@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.julianweinelt.caesar.CaesarEndpoint;
 import de.julianweinelt.caesar.api.FileManager;
 import de.julianweinelt.caesar.storage.MySQL;
 import de.julianweinelt.caesar.storage.data.AccountStatus;
@@ -29,8 +30,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
+@SuppressWarnings("SpellCheckingInspection")
 public class Endpoint {
     private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -38,8 +41,8 @@ public class Endpoint {
 
 
     public void start() {
-        new File("./lang/server").mkdirs();
-        new File("./lang/client").mkdirs();
+        if (new File("./lang/server").mkdirs()) log.info("Created directory for server language data.");
+        if (new File("./lang/client").mkdirs()) log.info("Created directory for client language data.");
 
         javalin = Javalin.create(javalinConfig -> {
                     MultipartConfig cfg = new MultipartConfig();
@@ -53,6 +56,7 @@ public class Endpoint {
                     javalinConfig.staticFiles.add("app", Location.EXTERNAL);
                 })
                 .before(ctx -> {
+                    if (serviceOffline(ctx)) return;
                     ctx.header("Access-Control-Allow-Origin", "*");
                     ctx.header("Access-Control-Allow-Credentials", "true");
                 })
@@ -64,9 +68,11 @@ public class Endpoint {
                     ctx.contentType("application/json");
                     String language = ctx.pathParam("language");
                     if (language.equals("available")) {
-                        List<String> languages = Files.list(Paths.get("./lang/server")).map(path ->
-                                path.getFileName().toString().replace(".json", "")).toList();
-                        ctx.result(GSON.toJson(languages));
+                        try (Stream<Path> files = Files.list(Paths.get("./lang/server"))) {
+                            List<String> languages = files.map(path ->
+                                    path.getFileName().toString().replace(".json", "")).toList();
+                            ctx.result(GSON.toJson(languages));
+                        }
                         return;
                     }
                     File file = new File("./lang/server/" + language + ".json");
@@ -81,9 +87,12 @@ public class Endpoint {
                     ctx.contentType("application/json");
                     String language = ctx.pathParam("language");
                     if (language.equals("available")) {
-                        List<String> languages = Files.list(Paths.get("./lang/client")).map(path ->
-                                path.getFileName().toString().replace(".json", "")).toList();
-                        ctx.result(GSON.toJson(languages));
+
+                        try (Stream<Path> files = Files.list(Paths.get("./lang/client"))) {
+                            List<String> languages = files.map(path ->
+                                    path.getFileName().toString().replace(".json", "")).toList();
+                            ctx.result(GSON.toJson(languages));
+                        }
                         return;
                     }
                     File file = new File("./lang/client" + language + ".json");
@@ -132,7 +141,8 @@ public class Endpoint {
                 })
 
                 .get("/api/image/{id}", ctx -> {
-                    String typeI = (ctx.queryParam("type") == null) ? "profile" : ctx.queryParam("type");
+                    String queryParamType = ctx.queryParam("type");
+                    String typeI = queryParamType == null ? "profile" : queryParamType;
                     UUID imageID = UUID.fromString(ctx.pathParam("id"));
                     String type = MySQL.getInstance().getImageType(imageID);
                     if (type == null) {
@@ -141,10 +151,14 @@ public class Endpoint {
                         return;
                     }
                     ctx.contentType(type);
-                    if (typeI.equals("profile"))
-                        ctx.result(new FileInputStream(FileManager.getInstance().getProfileImage(imageID)));
-                    else if (typeI.equals("screenshot")) ctx.result(new FileInputStream(FileManager.getInstance().getScreenShot(imageID)));
-                    else if (typeI.equals("plogo")) ctx.result(new FileInputStream(FileManager.getInstance().getPluginLogo(imageID)));
+                    switch (typeI) {
+                        case "profile" ->
+                                ctx.result(new FileInputStream(FileManager.getInstance().getProfileImage(imageID)));
+                        case "screenshot" ->
+                                ctx.result(new FileInputStream(FileManager.getInstance().getScreenShot(imageID)));
+                        case "plogo" ->
+                                ctx.result(new FileInputStream(FileManager.getInstance().getPluginLogo(imageID)));
+                    }
                 })
                 .post("/api/image/screenshot/{plugin}", ctx -> {
                     UploadedFile uploadedFile = ctx.uploadedFile("file");
@@ -183,6 +197,18 @@ public class Endpoint {
                     ctx.result(createSuccessResponse());
                 })
 
+                .patch("/api/market/follower", ctx -> {
+                    JsonObject root = JsonParser.parseString(ctx.body()).getAsJsonObject();
+                    UUID followedAcc = UUID.fromString(root.get("followed").getAsString());
+                    UUID follower = getUserIDFromToken(ctx);
+
+                    if (follower == null) {
+                        ctx.result(createErrorResponse(ErrorType.TOKEN_INVALID)).status(HttpStatus.FORBIDDEN); // 403
+                        return;
+                    }
+                    MySQL.getInstance().addFollower(followedAcc, follower);
+                })
+
                 .get("/api/market/plugin", ctx -> {
                     ctx.contentType("application/json");
 
@@ -213,7 +239,8 @@ public class Endpoint {
                     UUID pluginID = null;
                     String pluginName = null;
                     if (ctx.queryParam("pluginName") != null) pluginName = ctx.queryParam("pluginName");
-                    if (ctx.queryParam("pluginID") != null) pluginID = UUID.fromString(ctx.queryParam("pluginID"));
+                    String pluginQueryID = ctx.queryParam("pluginID");
+                    if (pluginQueryID != null) pluginID = UUID.fromString(pluginQueryID);
                     if (pluginID == null  && pluginName == null) {
                         return;
                     }
@@ -262,7 +289,7 @@ public class Endpoint {
                     UUID pluginID = UUID.randomUUID();
 
                     try (InputStream in = pluginFile.content()) {
-                        Files.copy(in, FileManager.getInstance().getFileToUploadPath(pluginID, "1.0.0").toPath(),
+                        Files.copy(in, FileManager.getInstance().getFileToUploadPath(pluginID, pluginVersion).toPath(),
                                 StandardCopyOption.REPLACE_EXISTING);
                     }
 
@@ -274,7 +301,6 @@ public class Endpoint {
                         }
                     }
 
-                    int count = 1;
                     List<UUID> screenshotIDs = new ArrayList<>();
                     for (UploadedFile file : screenshots) {
                         try (InputStream in = file.content()) {
@@ -283,11 +309,11 @@ public class Endpoint {
                                     StandardCopyOption.REPLACE_EXISTING);
                             MySQL.getInstance().setImageType(uuid, file.contentType());
                             screenshotIDs.add(uuid);
-                            count++;
                         }
                     }
 
                     PluginEntry entry = new PluginEntry();
+                    entry.setBackwardsCompatible(backwardsCompatible);
                     entry.setUniqueId(pluginID);
                     entry.setDateCreated(Date.from(Instant.now()));
                     entry.setLastUpdated(Date.from(Instant.now()));
@@ -305,6 +331,7 @@ public class Endpoint {
                     entry.setSponsorLink(sponsor);
                     entry.setSourceCode(github);
                     entry.setState(PluginState.REQUESTED);
+                    entry.getCategories().add(pluginCategory);
                     PluginManager.getInstance().createPlugin(entry);
                     ctx.result(createSuccessResponse());
                 })
@@ -337,7 +364,11 @@ public class Endpoint {
                     try {
                         PluginState state = PluginState.valueOf(root.get("state").getAsString().toUpperCase());
                         UUID pluginID = UUID.fromString(root.get("pluginID").getAsString());
-                        PluginManager.getInstance().updatePluginState(pluginID, state);
+                        boolean success = PluginManager.getInstance().updatePluginState(pluginID, state);
+                        if (!success) {
+                            ctx.result(createErrorResponse(ErrorType.INTERNAL_ERROR)).status(HttpStatus.IM_USED);
+                            return;
+                        }
                         ctx.result(createSuccessResponse());
                         ctx.status(HttpStatus.OK);
                     } catch (IllegalArgumentException ignored) {
@@ -437,6 +468,9 @@ public class Endpoint {
                         return;
                     }
 
+                    EMailUtil.getInstance().sendEmail(u.getEMail(), "New login to your account",
+                            EmailTemplateProvider.loginInfo(u.getUniqueID(), ctx.ip(), "Unknown"));
+
                     JsonObject response = new JsonObject();
                     response.addProperty("success", true);
                     response.addProperty("token", JWTUtil.token(u.getUniqueID()));
@@ -455,8 +489,8 @@ public class Endpoint {
                 })
 
                 .patch("/api/minecraft/rate", ctx -> {
-                    JsonObject body = JsonParser.parseString(ctx.body()).getAsJsonObject();
-
+                    //TODO: Add logic
+                    ctx.result(createSuccessResponse());
                 })
                 .get("/api/minecraft/plugin", ctx -> {
                     String market = ctx.queryParam("market");
@@ -465,6 +499,7 @@ public class Endpoint {
                         ctx.status(404).result(ErrorHandler.createError(ErrorHandler.CommonError.MC_PLUGIN_NOT_FOUND));
                         return;
                     }
+                    ctx.result(createSuccessResponse("Work in progress")); //TODO: add logic
                 })
                 .start(48009);
     }
@@ -497,7 +532,6 @@ public class Endpoint {
     }
 
     public UUID getUserIDFromToken(Context ctx) {
-
         String token = ctx.header("Authorization");
         if (token == null || token.isEmpty()) {
             ctx.status(HttpStatus.FORBIDDEN); // 403
@@ -513,6 +547,12 @@ public class Endpoint {
             return null;
         }
         DecodedJWT decodedJWT = JWTUtil.decode(token);
+        if (decodedJWT == null) {
+            ctx.status(HttpStatus.FORBIDDEN); // 403
+            ctx.result(createErrorResponse(ErrorType.TOKEN_INVALID));
+            ctx.skipRemainingHandlers();
+            return null;
+        }
         if (decodedJWT.getExpiresAt().before(Date.from(Instant.now()))) {
             ctx.status(HttpStatus.FORBIDDEN); // 403
             ctx.result(createErrorResponse(ErrorType.TOKEN_EXPIRED));
@@ -521,6 +561,15 @@ public class Endpoint {
         }
         String userID = decodedJWT.getSubject();
         return UUID.fromString(userID);
+    }
+
+    private boolean serviceOffline(Context ctx) {
+        if (CaesarEndpoint.getInstance().isMaintenance()) {
+            ctx.status(HttpStatus.SERVICE_UNAVAILABLE).result(createErrorResponse(ErrorType.MAINTENANCE));
+            ctx.skipRemainingHandlers();
+            return true;
+        }
+        return false;
     }
 
     public void stop() {
@@ -533,6 +582,7 @@ public class Endpoint {
     }
 
     public enum ErrorType {
+        MAINTENANCE,
         TOKEN_EXPIRED,
         TOKEN_INVALID,
         TOKEN_MISSING,

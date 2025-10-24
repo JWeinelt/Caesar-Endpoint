@@ -29,7 +29,7 @@ public class DiscordBot {
             try {jda.awaitReady();} catch (InterruptedException ignored) {}
             jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.customStatus("Working at Caesar Marketplace"));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error starting Discord Bot", e);
         }
     }
 

@@ -2,7 +2,6 @@ package de.julianweinelt.caesar;
 
 import de.julianweinelt.caesar.api.FileManager;
 import de.julianweinelt.caesar.discord.DiscordBot;
-import de.julianweinelt.caesar.storage.Configuration;
 import de.julianweinelt.caesar.storage.LocalStorage;
 import de.julianweinelt.caesar.storage.MySQL;
 import de.julianweinelt.caesar.storage.data.PluginManager;
@@ -10,6 +9,7 @@ import de.julianweinelt.caesar.storage.data.UserManager;
 import de.julianweinelt.caesar.web.Endpoint;
 import de.julianweinelt.caesar.web.mail.EMailUtil;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -17,6 +17,8 @@ import java.util.Arrays;
 
 @Slf4j
 public class CaesarEndpoint {
+    @Getter @Setter
+    private boolean maintenance;
 
     @Getter
     private static CaesarEndpoint instance;
